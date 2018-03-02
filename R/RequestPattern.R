@@ -371,8 +371,10 @@ BODY_FORMATS <- list(
 #'
 #' @export
 #' @keywords internal
-#' @param pattern (character) a uri, either plain character string or
-#' regex, see [base::regex]. if scheme is missing, it is added (we assume
+#' @param pattern (character) a uri, as a character string. if scheme
+#' is missing, it is added (we assume http)
+#' @param regex_pattern (character) a uri as a regex character string,
+#' see [base::regex]. if scheme is missing, it is added (we assume
 #' http)
 #' @details
 #' **Methods**
@@ -480,9 +482,47 @@ prune_trailing_slash <- function(x) sub("/$", "", x)
 
 prune_port <- function(x) gsub("(:80)|(:443)", "", x)
 
-prune_user_pwd <- function(x)
+# not sure what this was supposed to be
+#prune_user_pwd <- function(x)
 
 # matcher helpers --------------------------
+## URI stuff
+is_url <- function(x) {
+  grepl("https?://", x, ignore.case = TRUE) ||
+    grepl("localhost:[0-9]{4}", x, ignore.case = TRUE)
+}
+
+is_localhost <- function(x) {
+  grepl("localhost|127.0.0.1|0.0.0.0", x, ignore.case = TRUE)
+}
+
+parse_a_url <- function(url) {
+  tmp <- urltools::url_parse(url)
+  tmp <- as.list(tmp)
+  if (!is.na(tmp$parameter)) {
+    tmp$parameter <- unlist(
+      lapply(
+        strsplit(tmp$parameter, "&")[[1]], function(x) {
+          z <- strsplit(x, split = "=")[[1]]
+          as.list(stats::setNames(z[2], z[1]))
+        }),
+      recursive = FALSE
+    )
+  }
+  tmp$default_port <- 443
+  return(tmp)
+}
+
+uri_fetch <- function(x) {
+  x <- as.character(x)
+  tmp <- x[vapply(x, FUN = is_url, FUN.VALUE = logical(1))]
+  if (length(tmp) == 0) NULL else tmp
+}
+uri_host <- function(x) parse_a_url(x)$domain
+uri_path <- function(x) parse_a_url(x)$path
+uri_port <- function(x) parse_a_url(x)$port
+
+## http method
 get_method <- function(x) {
   x <- as.character(x)
   tmp <- grep(
@@ -492,26 +532,7 @@ get_method <- function(x) {
   if (length(tmp) == 0) NULL else tmp
 }
 
-is_url <- function(x) {
-  grepl("https?://", x, ignore.case = TRUE) ||
-    grepl("localhost:[0-9]{4}", x, ignore.case = TRUE)
-}
-
-get_uri <- function(x) {
-  x <- as.character(x)
-  #tmp <- grep("(https?|ftp|file)?:?(//)?[-A-Za-z0-9]+\\.[A-Za-z0-9]+", x, value = TRUE)
-  tmp <- x[vapply(x, is_url, logical(1))]
-  if (length(tmp) == 0) NULL else tmp
-}
-
-get_host <- function(x) {
-  eval(parse(text = vcr_c$uri_parser))(x)$hostname
-}
-
-get_path <- function(x) {
-  eval(parse(text = vcr_c$uri_parser))(x)$path
-}
-
+## query and body stuff
 get_query <- function(x) {
   if ("query" %in% names(x)) {
     x[["query"]]
@@ -527,4 +548,3 @@ get_body <- function(x) {
     NULL
   }
 }
-

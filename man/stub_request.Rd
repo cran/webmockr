@@ -28,6 +28,10 @@ Internally, this calls \link{StubbedRequest} which handles the logic
 See \code{\link[=stub_registry]{stub_registry()}} for listing stubs, \code{\link[=stub_registry_clear]{stub_registry_clear()}}
 for removing all stubs and \code{\link[=remove_request_stub]{remove_request_stub()}} for removing specific
 stubs
+
+If multiple stubs match the same request, we use the first stub. So if you
+want to use a stub that was created after an earlier one that matches,
+remove the earlier one(s).
 }
 \examples{
 \dontrun{
@@ -55,10 +59,26 @@ stub_registry()
 # regex
 stub_request("get", uri_regex = ".+ample\\\\..")
 
+# set stub an expectation to timeout
+stub_request("get", "https://httpbin.org/get") \%>\% to_timeout()
+x <- crul::HttpClient$new(url = "https://httpbin.org")
+res <- x$get('get')
+
+# raise exception
+library(fauxpas)
+stub_request("get", "https://httpbin.org/get") \%>\% to_raise(HTTPAccepted)
+stub_request("get", "https://httpbin.org/get") \%>\% to_raise(HTTPAccepted, HTTPGone)
+
+x <- crul::HttpClient$new(url = "https://httpbin.org")
+stub_request("get", "https://httpbin.org/get") \%>\% to_raise(HTTPBadGateway)
+crul::mock()
+x$get('get')
+
 # clear all stubs
+stub_registry()
 stub_registry_clear()
 }
 }
 \seealso{
-\code{\link[=wi_th]{wi_th()}}, \code{\link[=to_return]{to_return()}}
+\code{\link[=wi_th]{wi_th()}}, \code{\link[=to_return]{to_return()}}, \code{\link[=to_timeout]{to_timeout()}}, \code{\link[=to_raise]{to_raise()}}
 }

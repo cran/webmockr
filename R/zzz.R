@@ -4,6 +4,7 @@ cc <- function(x) Filter(Negate(is.null), x)
 
 hdl_lst <- function(x) {
   if (is.null(x) || length(x) == 0) return("")
+  if (is.raw(x)) return(paste0("raw bytes, length: ", length(x)))
   if (inherits(x, "list")) {
     return(paste(names(x), unname(x), sep = "=", collapse = ", "))
   } else {
@@ -28,11 +29,13 @@ url_builder <- function(uri, args = NULL) {
   paste0(uri, "?", paste(names(args), args, sep = "=", collapse = ","))
 }
 
-`%||%` <- function(x, y) if (is.null(x)) y else x
+`%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || nchar(x) == 0) y else x
+
+`!!` <- function(x) if (is.null(x) || is.na(x)) FALSE else TRUE
 
 assert <- function(x, y) {
   if (!is.null(x)) {
-    if (!class(x)[1] %in% y) {
+    if (!inherits(x, y)) {
       stop(deparse(substitute(x)), " must be of class ",
            paste0(y, collapse = ", "), call. = FALSE)
     }
@@ -60,5 +63,26 @@ webmockr_crul_fetch <- function(x) {
   }
   else {
     curl::curl_fetch_stream(x$url$url, x$stream, handle = x$url$handle)
+  }
+}
+
+# modified from purrr:::has_names
+along_rep <- function(x, y) rep(y, length.out = length(x))
+hz_namez <- function(x) {
+  nms <- names(x)
+  if (is.null(nms)) {
+    along_rep(x, FALSE)
+  }
+  else {
+    !(is.na(nms) | nms == "")
+  }
+}
+
+# check for a package
+check_for_pkg <- function(x) {
+  if (!requireNamespace(x, quietly = TRUE)) {
+    stop(sprintf("Please install '%s'", x), call. = FALSE)
+  } else {
+   invisible(TRUE)
   }
 }

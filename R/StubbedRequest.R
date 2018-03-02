@@ -47,6 +47,11 @@
 #' x$method
 #' x$uri
 #' x$to_s()
+#'
+#' (x <- StubbedRequest$new(method = "get", uri_regex = ".+ossref.org"))
+#' x$to_s()
+#' x$timeout <- TRUE
+#' x$to_s()
 #' }
 StubbedRequest <- R6::R6Class(
   'StubbedRequest',
@@ -62,6 +67,10 @@ StubbedRequest <- R6::R6Class(
     response_headers = NULL,
     response = NULL,
     responses_sequences = NULL,
+    status_code = NULL,
+    timeout = FALSE,
+    exceptions = NULL,
+    raise = FALSE,
 
     initialize = function(method, uri = NULL, uri_regex = NULL) {
       if (!missing(method)) {
@@ -91,6 +100,10 @@ StubbedRequest <- R6::R6Class(
           sep = "\n")
       cat(paste0("    response_headers: ", hdl_lst(self$responses_sequences$headers)),
           sep = "\n")
+      cat(paste0("  should_timeout: ", self$timeout), sep = "\n")
+      cat(paste0("  should_raise: ",
+        if (self$raise) paste0(vapply(self$exceptions, "[[", "", "classname"), collapse = ", ") else "FALSE"
+      ), sep = "\n")
     },
 
     with = function(query = NULL, body = NULL, headers = NULL) {
@@ -106,6 +119,32 @@ StubbedRequest <- R6::R6Class(
         body = body,
         headers = headers
       )
+      self$responses_sequences$body_raw = {
+        if (inherits(body, "logical")) {
+          if (!body) raw() else stop("Unknown type of `body`: must be NULL, FALSE, character, raw or list",
+                                     call. = FALSE)
+        } else if (inherits(body, "raw")) {
+          body
+        } else if (is.null(body)) {
+          raw()
+        } else if (is.character(body)) {
+          charToRaw(body)
+        } else if (!is.list(body)) {
+          stop("Unknown type of `body`: must be NULL, FALSE, character, raw or list",
+            call. = FALSE)
+        } else {
+          charToRaw(jsonlite::toJSON(body, auto_unbox = TRUE))
+        }
+      }
+    },
+
+    to_timeout = function() {
+      self$timeout <- TRUE
+    },
+
+    to_raise = function(x) {
+      self$exceptions <- x
+      self$raise <- TRUE
     },
 
     to_s = function() {
@@ -115,7 +154,7 @@ StubbedRequest <- R6::R6Class(
         make_headers(self$responses_sequences$headers)
       )
       gsub("^\\s+|\\s+$", "", sprintf(
-        "  %s: %s %s %s %s",
+        "  %s: %s %s %s %s %s",
         self$method,
         url_builder(self$uri, self$query),
         make_body(self$body),
@@ -125,7 +164,9 @@ StubbedRequest <- R6::R6Class(
           sprintf("| to_return: %s %s %s", toret[1], toret[2], toret[3])
         } else {
           ""
-        }
+        },
+        # timeout info
+        if (self$timeout) "| should_timeout: TRUE" else ""
       ))
     }
   )
