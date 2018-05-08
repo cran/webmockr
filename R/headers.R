@@ -1,52 +1,38 @@
 # headers <- list(`Content-type` = 'application/json', Stuff = "things")
 # normalize_headers(x = headers)
-
-normalize_headers <- function(x = NULL) {
+#
+# headers <- list(`content-type` = 'application/json', stuff = "things")
+# normalize_headers(x = headers, capitalize = FALSE)
+#
+# headers <- list(`content-type` = 'application/json', `x-frame-options` = c("SAMEORIGIN", "sameorigin"))
+# normalize_headers(x = headers)
+# normalize_headers(x = headers, FALSE)
+normalize_headers <- function(x = NULL, capitalize = TRUE) {
   if (is.null(x) || length(x) == 0) return(x)
-  res <- Map(function(name, value) {
+
+  res <- list()
+  for (i in seq_along(x)) {
     name <- paste0(
-      vapply(strsplit(as.character(name), '_|-')[[1]], function(w) simple_cap(w), ""),
+      vapply(strsplit(as.character(names(x)[i]), '_|-')[[1]], function(w) simple_cap(w, capitalize), ""),
       collapse = "-"
     )
     value <- switch(
-      class(value),
-      #when Regexp then value
-      list = if (length(value) == 1) value[[1]] else sort(vapply(value, function(z) as.character(z), "")),
-      as.character(value)
+      class(x[[i]]),
+      list = if (length(x[[i]]) == 1) x[[i]][[1]] else sort(vapply(x[[i]], function(z) as.character(z), "")),
+      if (length(x[[i]]) > 1) paste0(as.character(x[[i]]), collapse = ",") else as.character(x[[i]])
     )
-    list(name, value)
-  }, names(x), unlist(unname(x)))
-  vapply(res, function(z) stats::setNames(z[2], z[1]), list(1))
+    res[[i]] <- list(name, value)
+  }
+
+  unlist(lapply(res, function(z) stats::setNames(z[2], z[1])), FALSE)
 }
 
-simple_cap <- function(x) {
-  s <- strsplit(x, " ")[[1]]
-  paste(toupper(substring(s, 1, 1)), substring(s, 2),
-        sep = "", collapse = " ")
+simple_cap <- function(x, capitalize) {
+  if (capitalize) {
+    s <- strsplit(x, " ")[[1]]
+    paste(toupper(substring(s, 1, 1)), substring(s, 2),
+          sep = "", collapse = " ")
+  } else {
+    x
+  }
 }
-
-# class Headers
-
-#   def self.sorted_headers_string(headers)
-#     headers = WebMock::Util::Headers.normalize_headers(headers)
-#     str = '{'
-#     str << headers.map do |k,v|
-#       v = case v
-#         when Regexp then v.inspect
-#         when Array then "["+v.map{|w| "'#{w.to_s}'"}.join(", ")+"]"
-#         else "'#{v.to_s}'"
-#       end
-#       "'#{k}'=>#{v}"
-#     end.sort.join(", ")
-#     str << '}'
-#   end
-
-#   def self.decode_userinfo_from_header(header)
-#     header.sub(/^Basic /, "").unpack("m").first
-#   end
-
-#   def self.basic_auth_header(*credentials)
-#     "Basic #{Base64.strict_encode64(credentials.join(':')).chomp}"
-#   end
-
-# end

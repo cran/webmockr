@@ -12,6 +12,27 @@ hdl_lst <- function(x) {
   }
 }
 
+hdl_lst2 <- function(x) {
+  if (is.null(x) || length(x) == 0) return("")
+  if (is.raw(x)) return(rawToChar(x))
+  if (inherits(x, "list")) {
+    out <- vector(mode = "character", length = length(x))
+    for (i in seq_along(x)) {
+      targ <- x[[i]]
+      out[[i]] <- paste(names(x)[i], switch(
+        class(targ)[1L],
+        character = sprintf('\"%s\"', targ),
+        list = sprintf("list(%s)", hdl_lst2(targ)),
+        targ
+      ), sep = "=")
+    }
+    return(paste(out, collapse = ", "))
+  } else {
+    # FIXME: dumping ground, just spit out whatever and hope for the best
+    return(x)
+  }
+}
+
 parseurl <- function(x) {
   tmp <- urltools::url_parse(x)
   tmp <- as.list(tmp)
@@ -29,7 +50,7 @@ url_builder <- function(uri, args = NULL) {
   paste0(uri, "?", paste(names(args), args, sep = "=", collapse = ","))
 }
 
-`%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || nchar(x) == 0) y else x
+`%||%` <- function(x, y) if (is.null(x) || length(x) == 0 || nchar(x) == 0 || all(is.na(x))) y else x
 
 `!!` <- function(x) if (is.null(x) || is.na(x)) FALSE else TRUE
 
@@ -54,6 +75,11 @@ crul_head_parse <- function(z) {
 
 crul_headers_parse <- function(x) do.call("c", lapply(x, crul_head_parse))
 
+#' execute a curl request
+#' @export
+#' @keywords internal
+#' @param x an object
+#' @return a curl response
 webmockr_crul_fetch <- function(x) {
   if (is.null(x$disk) && is.null(x$stream)) {
     curl::curl_fetch_memory(x$url$url, handle = x$url$handle)

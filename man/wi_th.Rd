@@ -5,9 +5,9 @@
 \alias{wi_th_}
 \title{Set additional parts of a stubbed request}
 \usage{
-wi_th(.data, ...)
+wi_th(.data, ..., .list = list())
 
-wi_th_(.data, ..., .dots)
+wi_th_(.data, ..., .dots, .list)
 }
 \arguments{
 \item{.data}{input. Anything that can be coerced to a \code{StubbedRequest} class
@@ -16,6 +16,11 @@ object}
 \item{...}{Comma separated list of variable names, passed on
 to \code{\link[lazyeval:lazy_dots]{lazyeval::lazy_dots()}}. accepts the following: query, body,
 headers}
+
+\item{.list}{named list of things, has to be one of 'query', 'body',
+and/or 'headers'. This is an escape hatch to avoid NSE (non-standard
+evaluation), so don't pass the same thing to both, e.g. don't pass
+'query' via NSE, and also 'query' to this parameter}
 
 \item{.dots}{Used to work around non-standard evaluation}
 }
@@ -39,4 +44,29 @@ Values for status, body, and headers:
 }
 \note{
 see examples in \code{\link[=stub_request]{stub_request()}}
+}
+\examples{
+# first, make a stub object
+req <- stub_request("post", "https://httpbin.org/post")
+
+# add body
+# list
+wi_th(req, body = list(foo = "bar"))
+# string
+wi_th(req, body = '{"foo": "bar"}')
+# raw
+wi_th(req, body = charToRaw('{"foo": "bar"}'))
+# numeric
+wi_th(req, body = 5)
+
+# add query - has to be a named list
+wi_th(req, query = list(foo = "bar"))
+
+# add headers - has to be a named list
+wi_th(req, headers = list(foo = "bar"))
+wi_th(req, headers = list(`User-Agent` = "webmockr/v1", hello="world"))
+
+
+# .list NSE escape hatch
+wi_th(req, .list = list(body = list(foo = "bar")))
 }

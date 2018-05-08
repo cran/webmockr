@@ -85,7 +85,7 @@ in the `webmockr_configure()` function.
 
 **Storing actual HTTP responses**
 
-`webmockr` doesn't do that. Check out [vcr](https://github.com/ropensci/vcr) for that.
+`webmockr` doesn't do that. Check out [vcr](https://github.com/ropensci/vcr).
 
 </p></details>
 
@@ -99,8 +99,7 @@ in the `webmockr_configure()` function.
 
 ## Supported HTTP libraries
 
-* [crul](https://github.com/ropensci/crul) - an updated `crul` version is coming 
-to CRAN soon, but not up as of today (2017-05-21)
+* [crul](https://github.com/ropensci/crul)
 
 > more to come
 
@@ -209,7 +208,7 @@ x$get('get')
 #> <crul response> 
 #>   url: https://httpbin.org/get
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.1 crul/0.5.2
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.5.2
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -245,7 +244,7 @@ x$get('get', query = list(hello = "world"))
 #> <crul response> 
 #>   url: https://httpbin.org/get?hello=world
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.1 crul/0.5.2
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.5.2
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -294,7 +293,7 @@ x$get('get', query = list(hello = "world"))
 #> <crul response> 
 #>   url: https://httpbin.org/get?hello=world
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.1 crul/0.5.2
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.5.2
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -357,7 +356,7 @@ x$get('get', query = list(a = "b"))
 * Please [report any issues or bugs](https://github.com/ropensci/webmockr/issues).
 * License: MIT
 * Get citation information for `webmockr` in R doing `citation(package = 'webmockr')`
-* Please note that this project is released with a [Contributor Code of Conduct](CONDUCT.md).
+* Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
 By participating in this project you agree to abide by its terms.
 
 [![ropensci_footer](https://ropensci.org/public_images/github_footer.png)](https://ropensci.org)

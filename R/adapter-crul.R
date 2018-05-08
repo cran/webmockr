@@ -91,39 +91,44 @@ CrulAdapter <- R6::R6Class(
         }
 
         # generate crul response
-        crul_resp <- build_crul_response(req, resp)
+        # VCR: recordable/ignored
+        # if ("package:vcr" %in% search()) {
+        #   # cas <- vcr::current_cassette()
+        #   # if (length(cas$previously_recorded_interactions()) == 0) {
+        #   #   # using vcr, but no recorded interactions to the cassette yet
+        #   #   # use RequestHandler - gets current cassette & record interaction
+        #   #   crul_resp <- vcr::RequestHandlerCrul$new(req)$handle()
+        #   # }
+        # } else {
+          crul_resp <- build_crul_response(req, resp)
 
-        # add to_return() elements if given
-        if (length(cc(ss$responses_sequences)) != 0) {
-          # remove NULLs
-          toadd <- cc(ss$responses_sequences)
-          # modify responses
-          for (i in seq_along(toadd)) {
-            if (names(toadd)[i] == "status") {
-              crul_resp$status_code <- toadd[[i]]
-            }
-            if (names(toadd)[i] == "body") {
-              # crul_resp$content <- toadd[[i]]
-              crul_resp$content <- ss$responses_sequences$body_raw
-            }
-            if (names(toadd)[i] == "headers") {
-              crul_resp$response_headers <- toadd[[i]]
+          # add to_return() elements if given
+          if (length(cc(ss$responses_sequences)) != 0) {
+            # remove NULLs
+            toadd <- cc(ss$responses_sequences)
+            # modify responses
+            for (i in seq_along(toadd)) {
+              if (names(toadd)[i] == "status") {
+                crul_resp$status_code <- toadd[[i]]
+              }
+              if (names(toadd)[i] == "body") {
+                # crul_resp$content <- toadd[[i]]
+                crul_resp$content <- ss$responses_sequences$body_raw
+              }
+              if (names(toadd)[i] == "headers") {
+                crul_resp$response_headers <- toadd[[i]]
+              }
             }
           }
-        }
+        # }
 
         # if vcr loaded: record http interaction into vcr namespace
-        ## FIXME (lines below): put back after vcr on CRAN
+        # VCR: recordable/stubbed_by_vcr ??
         # if ("package:vcr" %in% search()) {
         #   # get current cassette
-        #   cas <- vcr::cassette_current()
-        #   # record http interaction into vcr http interaction list
-        #   cas$record_http_interaction(crul_resp)
-        #   # build crul_resp from vcr http interaction on disk (i.e., on casette)
-        #   crul_resp <- cas$serialize_to_crul()
-        # }
-        ## FIXME (lines above): put back after vcr on CRAN
-        # else: since vcr is not loaded - skip
+        #   cas <- vcr::current_cassette()
+        #   crul_resp <- vcr::RequestHandlerCrul$new(req)$handle()
+        # } # vcr is not loaded, skip
 
       } else if (webmockr_net_connect_allowed(uri = req$url$url)) {
         # if real requests || localhost || certain exceptions ARE
@@ -133,18 +138,38 @@ CrulAdapter <- R6::R6Class(
         crul_resp <- build_crul_response(req, tmp2)
 
         # if vcr loaded: record http interaction into vcr namespace
-        ## FIXME (lines below): put back after vcr on CRAN
+        # VCR: recordable
         # if ("package:vcr" %in% search()) {
-        #   # get current cassette
-        #   cas <- vcr::cassette_current()
-        #   # record http interaction into vcr http interaction list
-        #   cas$record_http_interaction(crul_resp)
+        #   # stub request so next time we match it
+        #   urip <- crul::url_parse(req$url$url)
+        #   m <- vcr::vcr_configuration()$match_requests_on
+        #
+        #   if (all(m %in% c("method", "uri")) && length(m) == 2) {
+        #     stub_request(req$method, req$url$url)
+        #   } else if (all(m %in% c("method", "uri", "query")) && length(m) == 3) {
+        #     tmp <- stub_request(req$method, req$url$url)
+        #     wi_th(tmp, .list = list(query = urip$parameter))
+        #   } else if (all(m %in% c("method", "uri", "headers")) && length(m) == 3) {
+        #     tmp <- stub_request(req$method, req$url$url)
+        #     wi_th(tmp, .list = list(query = req$headers))
+        #   } else if (all(m %in% c("method", "uri", "headers", "query")) && length(m) == 4) {
+        #     tmp <- stub_request(req$method, req$url$url)
+        #     wi_th(tmp, .list = list(query = urip$parameter, headers = req$headers))
+        #   }
+        #
+        #   # use RequestHandler instead? - which gets current cassette for us
+        #   vcr::RequestHandlerCrul$new(req)$handle()
         # }
-        ## FIXME (lines above): put back after vcr on CRAN
 
       } else {
+        # throw vcr error: should happen when user not using
+        #  use_cassette or insert_cassette
+        # if ("package:vcr" %in% search()) {
+        #   vcr::RequestHandlerCrul$new(req)$handle()
+        # }
+
         # no stubs found and net connect not allowed - STOP
-        x <- "Real HTTP connections are disabled.\nUnregistered request:"
+        x <- "Real HTTP connections are disabled.\nUnregistered request:\n "
         y <- "\n\nYou can stub this request with the following snippet:\n\n  "
         z <- "\n\nregistered request stubs:\n\n"
         msgx <- paste(x, request_signature$to_s())
@@ -158,7 +183,8 @@ CrulAdapter <- R6::R6Class(
         } else {
           msgz <- ""
         }
-        stop(paste0(msgx, msgy, msgz), call. = FALSE)
+        ending <- "\n============================================================"
+        stop(paste0(msgx, msgy, msgz, ending), call. = FALSE)
       }
 
       return(crul_resp)
@@ -176,18 +202,36 @@ CrulAdapter <- R6::R6Class(
         x$method,
         x$uri
       )
-      if (!is.null(x$headers)) {
-        hd <- x$headers
-        hd_str <- sprintf(
-          "wi_th(headers = list(%s))",
-          paste0(
+      if (!is.null(x$headers) || !is.null(x$body)) {
+        # set defaults to ""
+        hd_str <- bd_str <- ""
+
+        # headers has to be a named list, so easier to deal with
+        if (!is.null(x$headers)) {
+          hd <- x$headers
+          hd_str <- paste0(
             paste(sprintf("'%s'", names(hd)),
                   sprintf("'%s'", unlist(unname(hd))), sep = " = "),
             collapse = ", ")
-        )
-        tmp <- paste0(tmp, " %>%\n    ", hd_str)
+        }
+
+        # body can be lots of things, so need to handle various cases
+        if (!is.null(x$body)) {
+          bd <- x$body
+          bd_str <- hdl_lst2(bd)
+        }
+
+        if (nzchar(hd_str) && nzchar(bd_str)) {
+          with_str <- sprintf(" wi_th(\n       headers = list(%s),\n       body = list(%s)\n     )",
+                              hd_str, bd_str)
+        } else if (nzchar(hd_str) && !nzchar(bd_str)) {
+          with_str <- sprintf(" wi_th(\n       headers = list(%s)\n     )", hd_str)
+        } else if (!nzchar(hd_str) && nzchar(bd_str)) {
+          with_str <- sprintf(" wi_th(\n       body = list(%s)\n     )", bd_str)
+        }
+
+        tmp <- paste0(tmp, " %>%\n    ", with_str)
       }
-      cat(tmp, sep = "\n")
       return(tmp)
     }
   )
@@ -208,15 +252,29 @@ build_crul_response <- function(req, resp) {
       if (grepl("^ftp://", resp$url)) {
         list()
       } else {
-        hh <- rawToChar(resp$headers %||% raw(0))
-        if (is.null(hh) || nchar(hh) == 0) {
-          list()
+        hds <- resp$headers
+
+        if (is.null(hds)) {
+          hds <- resp$response_headers
+
+          if (is.null(hds)) {
+            list()
+          } else {
+            stopifnot(is.list(hds))
+            stopifnot(is.character(hds[[1]]))
+            hds
+          }
         } else {
-          crul_headers_parse(curl::parse_headers(hh))
+          hh <- rawToChar(hds %||% raw(0))
+          if (is.null(hh) || nchar(hh) == 0) {
+            list()
+          } else {
+            crul_headers_parse(curl::parse_headers(hh))
+          }
         }
       }
     },
-    modified = resp$modified,
+    modified = resp$modified %||% NA,
     times = resp$times,
     content = resp$content,
     handle = req$url$handle,
@@ -233,7 +291,7 @@ build_crul_request = function(x) {
     method = x$method,
     uri = x$url$url,
     options = list(
-      body = x$body %||% NULL,
+      body = x$fields %||% NULL,
       headers = x$headers %||% NULL,
       proxies = x$proxies %||% NULL,
       auth = x$auth %||% NULL

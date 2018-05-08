@@ -81,7 +81,7 @@ RequestPattern <- R6::R6Class(
     matches = function(request_signature) {
       assert(request_signature, "RequestSignature")
       c_type <- if (!is.null(request_signature$headers)) request_signature$headers$`Content-Type` else NULL
-      c_type <- if (!is.null(c_type)) strsplit(c_type, ';')[[1]][1]
+      if (!is.null(c_type)) c_type <- strsplit(c_type, ';')[[1]][1]
       self$method_pattern$matches(request_signature$method) &&
         self$uri_pattern$matches(request_signature$uri) &&
         (is.null(self$body_pattern) || self$body_pattern$matches(request_signature$body, c_type %||% "")) &&
@@ -230,11 +230,6 @@ HeadersPattern <- R6::R6Class(
 
     initialize = function(pattern) {
       stopifnot(is.list(pattern))
-      # # normalize names
-      # names(pattern) <- tolower(names(pattern))
-      # # normalize symbols
-      # ## underscores to single dash
-      # names(pattern) <- gsub("_", "-", names(pattern))
       pattern <- private$normalize_headers(pattern)
       self$pattern <- pattern
     },
@@ -290,8 +285,19 @@ HeadersPattern <- R6::R6Class(
 #' @format NULL
 #' @usage NULL
 #' @examples
-#' z <- BodyPattern$new(pattern = list(a = "foobar"))
+#' # make a request signature
+#' bb <- RequestSignature$new(
+#'   method = "get",
+#'   uri = "https:/httpbin.org/get",
+#'   options = list(
+#'     body = list(foo = "bar", a = 5)
+#'   )
+#' )
+#'
+#' # make body pattern object
+#' z <- BodyPattern$new(pattern = list(foo = "bar"))
 #' z$pattern
+#' z$matches(bb$body)
 BodyPattern <- R6::R6Class(
   'BodyPattern',
   public = list(
@@ -308,7 +314,7 @@ BodyPattern <- R6::R6Class(
     matches = function(body, content_type = "") {
       if (inherits(self$pattern, "list")) {
         if (length(self$pattern) == 0) return(TRUE)
-        private$matching_hashes(self$body_as_hash(body, content_type), self$pattern)
+        private$matching_hashes(private$body_as_hash(body, content_type), self$pattern)
       } else {
         private$empty_string(self$pattern) && private$empty_string(body) ||
           self$pattern == body
@@ -328,27 +334,31 @@ BodyPattern <- R6::R6Class(
       is.null(string) || nchar(string) == 0
     },
 
-    matching_hashes = function(query_parameters, pattern) {
-      if (inherits(query_parameters, "list")) return(FALSE)
-      if (sort(names(query_parameters)) == sort(names(self$pattern))) return(FALSE)
-      for (i in seq_along(query_parameters)) {
-        expected <- self$pattern[names(query_parameters)[i]]
+    matching_hashes = function(z, pattern) {
+      if (is.null(z)) return(FALSE)
+      if (!inherits(z, "list")) return(FALSE)
+      if (!all(sort(names(z)) %in% sort(names(pattern)))) return(FALSE)
+      for (i in seq_along(z)) {
+        expected <- pattern[[names(z)[i]]]
+        actual <- z[[i]]
         if (inherits(actual, "list") && inherits(expected, "list")) {
           if (private$matching_hashes(actual, expected)) return(FALSE)
         } else {
-          if (identical(actual, expected)) return(FALSE)
+          if (!identical(as.character(actual), as.character(expected))) return(FALSE)
         }
       }
+      return(TRUE)
     },
 
     body_as_hash = function(body, content_type) {
-      bctype <- BODY_FORMATS[[content_type]]
+      bctype <- BODY_FORMATS[[content_type]] %||% ""
       if (bctype == 'json') {
         jsonlite::fromJSON(body, FALSE)
       } else if (bctype == 'xml') {
+        check_for_pkg("xml2")
         xml2::read_xml(body)
       } else {
-        stop('fix me')
+        query_mapper(body)
       }
     }
   )
@@ -419,6 +429,7 @@ BODY_FORMATS <- list(
 #' z$pattern
 #'
 #' (z <- UriPattern$new(pattern = "http://foobar.com"))
+#' z$pattern
 #' z$add_query_params(list(pizza = "deep dish", cheese = "cheddar"))
 #' z$pattern
 
@@ -440,7 +451,7 @@ UriPattern <- R6::R6Class(
       # normalize uri
       uri <- normalize_uri(uri)
 
-      # FIXME, may need to match optionally to URI alone or URI + query
+      # FIXME: may need to match optionally to URI alone or URI + query
       # params, etc.
       if (!self$regex) return(uri == self$pattern)
       if (self$regex) return(grepl(self$pattern, uri))
@@ -481,9 +492,6 @@ normalize_uri <- function(x) {
 prune_trailing_slash <- function(x) sub("/$", "", x)
 
 prune_port <- function(x) gsub("(:80)|(:443)", "", x)
-
-# not sure what this was supposed to be
-#prune_user_pwd <- function(x)
 
 # matcher helpers --------------------------
 ## URI stuff

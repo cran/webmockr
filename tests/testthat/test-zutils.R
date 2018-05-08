@@ -99,9 +99,11 @@ test_that("webmockr_disable_net_connect", {
 
 context("util fxns: webmockr_allow_net_connect")
 test_that("webmockr_allow_net_connect", {
+  # first call, sets to TRUE, and returns message
+
   # nothing passed
-  expect_true(sm(webmockr_allow_net_connect()))
-  expect_message(webmockr_allow_net_connect(), "net connect allowed")
+  expect_message(z <- webmockr_allow_net_connect(), "net connect allowed")
+  expect_true(z)
 
   # check if net collect allowed afterwards, should be TRUE
   expect_true(webmockr_net_connect_allowed())
@@ -139,4 +141,41 @@ test_that("webmockr_disable", {
 })
 test_that("webmockr_enable", {
   expect_error(webmockr_enable(), "see \\?enable")
+})
+
+
+context("util fxns: hdl_lst")
+test_that("hdl_lst works", {
+  expect_equal(hdl_lst(NULL), "")
+  expect_equal(hdl_lst(character(0)), "")
+
+  expect_equal(hdl_lst(raw(0)), "")
+  expect_equal(hdl_lst(raw(5)), "raw bytes, length: 5")
+
+  expect_error(hdl_lst(), "argument \"x\" is missing")
+
+  expect_equal(hdl_lst(list(foo = "bar")), "foo=bar")
+  expect_equal(hdl_lst(list(foo = 5)), "foo=5")
+  expect_equal(hdl_lst(list(foo = 5, bar = "a")), "foo=5, bar=a")
+
+  expect_equal(hdl_lst(1.5), 1.5)
+})
+
+
+context("util fxns: hdl_lst2")
+test_that("hdl_lst2 works", {
+  expect_equal(hdl_lst2(NULL), "")
+  expect_equal(hdl_lst2(character(0)), "")
+
+  expect_equal(hdl_lst2(raw(5)), "")
+  expect_equal(hdl_lst2(charToRaw("hello")), "hello")
+
+  expect_error(hdl_lst2(), "argument \"x\" is missing")
+
+  expect_equal(hdl_lst2(list(foo = "bar")), "foo=\"bar\"")
+  expect_equal(hdl_lst2(list(foo = 5)), "foo=5")
+  expect_equal(hdl_lst2(list(foo = 5, bar = "a")), "foo=5, bar=\"a\"")
+  expect_equal(hdl_lst2(list(foo = "bar", stuff = FALSE)), "foo=\"bar\", stuff=FALSE")
+
+  expect_equal(hdl_lst2(1.5), 1.5)
 })
