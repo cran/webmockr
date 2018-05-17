@@ -1,7 +1,7 @@
-ac0fd19dff5e690da65ff00f63079623 *DESCRIPTION
+a913fd10802cb18c67ed07c099820fa6 *DESCRIPTION
 1b96a74f7e95cf508e814ad0c04525e5 *LICENSE
 d51d50c1e041cb38b052134bdb7958bc *NAMESPACE
-75db959d568195f2fa488990b2edac78 *NEWS.md
+511e548d4300fad7ea672833953a0280 *NEWS.md
 1d57690083903f22a871f90f00f9bf26 *R/HttpLibAdapterRegistry.R
 5bb878fbb5e625a1fce0a390ea780b28 *R/RequestPattern.R
 4c99c71a37053ff4348aa7b5a0aaccc1 *R/RequestRegistry.R
@@ -9,7 +9,7 @@ d51d50c1e041cb38b052134bdb7958bc *NAMESPACE
 771ecea884689131bd0659432775d1ee *R/Response.R
 51b3f75e911cb182bc25e8be6345a45a *R/StubRegistry.R
 d12f047a0d79881d7e629843883a907a *R/StubbedRequest.R
-0f10e80fe78e73c6ee0994a034f67390 *R/adapter-crul.R
+df77d0d8b99e6d64bb33c4bf2f6b7a9d *R/adapter-crul.R
 2f637a1a0c5451d8349f9eabf162986a *R/defunct.R
 79a6257879569ee5f5c71cf16c03760c *R/flipswitch.R
 d64d3ea6fde479b3e3a7c4114d7abb63 *R/globals.R
@@ -30,7 +30,7 @@ b2681f2aeb22813e3d75a57afd1f6875 *R/webmockr-opts.R
 d27312fd68ad6527e7a46788016a22bb *R/webmockr.R
 75e45c539485fd453ef621ef8126e558 *R/wi_th.R
 ac1dd2ad241e5e4b5afe4e8d1928efe5 *R/zzz.R
-8b12ebd63a8ee13bd889985b579bcff2 *README.md
+b2c9363d48f726b6591aa5001fe3539d *README.md
 bfab6207f448fab82e6cd42ebc3abbf2 *inst/ignore/adapter-httr.R
 c2dad18498a5fbbfa1ad2b9618072bcb *inst/ignore/sockets.R
 665ef9e520918bb15c2ddf9505b02af2 *man/BodyPattern.Rd
@@ -68,7 +68,7 @@ ad9cb95dc4400f1e78b8d481cf15090a *man/wi_th.Rd
 6695b4e11699caab8ba7c936ff9d0778 *tests/test-all.R
 43e9a3a2f19d982c0919de0490556d0c *tests/testthat/crul_obj.rda
 30fd0a2b3950040186b1e2772490d9ff *tests/testthat/helper-webmockr.R
-9071cd5aff6544a6e20daa5ff87f7a69 *tests/testthat/test-CrulAdapter.R
+fe3f9625e9e038bc922bde093163f437 *tests/testthat/test-CrulAdapter.R
 3b3c8f9cc9dc4b35609a0153d59aeca4 *tests/testthat/test-HashCounter.R
 670c4badc6762df39b94577d3c8d4750 *tests/testthat/test-HttpLibAdapaterRegistry.R
 48de2fd421e5cb753835a6862a08d406 *tests/testthat/test-RequestPattern.R
@@ -78,7 +78,7 @@ d88d849b57711b6aab7faefc2502490e *tests/testthat/test-Response.R
 33d39acaf9c54f6d75d45731fa06dd94 *tests/testthat/test-StubRegistry.R
 a31ea3b57342682c03ce55142837dc84 *tests/testthat/test-StubbedRequest.R
 bf971a5352467ddab8735bb150c2c055 *tests/testthat/test-flipswitch.R
-8f1a5fb8e69b64f9d863d987c1fdfc38 *tests/testthat/test-no-cassette-in-use.R
+67ebd95f07d4c45e8aa71352d61237f3 *tests/testthat/test-no-cassette-in-use.R
 1c3d075244ad19058481a86bdec90c3c *tests/testthat/test-stub_request.R
 ca78f094ce17e2641a4fd1f038918724 *tests/testthat/test-stub_requests_crul.R
 98b341b68b89cf719142c2eb8ee5fe94 *tests/testthat/test-to_raise.R
