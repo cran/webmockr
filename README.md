@@ -3,6 +3,7 @@ webmockr
 
 
 
+[![cran checks](https://cranchecks.info/badges/worst/webmockr)](https://cranchecks.info/pkgs/webmockr)
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![Build Status](https://travis-ci.org/ropensci/webmockr.svg?branch=master)](https://travis-ci.org/ropensci/webmockr)
 [![codecov](https://codecov.io/gh/ropensci/webmockr/branch/master/graph/badge.svg)](https://codecov.io/gh/ropensci/webmockr)
@@ -100,8 +101,9 @@ in the `webmockr_configure()` function.
 ## Supported HTTP libraries
 
 * [crul](https://github.com/ropensci/crul)
+* [httr](https://github.com/r-lib/httr)
 
-> more to come: curl, httr
+> in development: curl
 
 ## Install
 
@@ -130,6 +132,7 @@ library(webmockr)
 ```r
 webmockr::enable()
 #> CrulAdapter enabled!
+#> HttrAdapter enabled!
 ```
 
 ## Inside a test framework
@@ -208,7 +211,7 @@ x$get('get')
 #> <crul response> 
 #>   url: https://httpbin.org/get
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.5.2
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.6.0
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -244,7 +247,7 @@ x$get('get', query = list(hello = "world"))
 #> <crul response> 
 #>   url: https://httpbin.org/get?hello=world
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.5.2
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.6.0
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -293,7 +296,7 @@ x$get('get', query = list(hello = "world"))
 #> <crul response> 
 #>   url: https://httpbin.org/get?hello=world
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.5.2
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.6.0
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -349,6 +352,76 @@ x <- HttpClient$new(url = "https://httpbin.org")
 x$get('get', query = list(a = "b"))
 #> Error: Bad Request (HTTP 400).
 #>  - The request could not be understood by the server due to malformed syntax. The client SHOULD NOT repeat the request without modifications.
+```
+
+## httr integration
+
+
+```r
+library(webmockr)
+library(httr)
+#> 
+#> Attaching package: 'httr'
+#> The following object is masked from 'package:crul':
+#> 
+#>     handle
+
+# turn on httr mocking
+httr_mock()
+```
+
+
+```r
+# no stub found
+GET("https://httpbin.org/get")
+#> Error: Real HTTP connections are disabled.
+#> Unregistered request:
+#>   GET https://httpbin.org/get   with headers {Accept: application/json, text/xml, application/xml, */*}
+#> 
+#> You can stub this request with the following snippet:
+#> 
+#>    stub_request('get', uri = 'https://httpbin.org/get') %>%
+#>      wi_th(
+#>        headers = list('Accept' = 'application/json, text/xml, application/xml, */*')
+#>      )
+#> ============================================================
+```
+
+make a stub
+
+
+```r
+stub_request('get', uri = 'https://httpbin.org/get') %>%
+  wi_th(
+    headers = list('Accept' = 'application/json, text/xml, application/xml, */*')
+  ) %>%
+  to_return(status = 418, body = "I'm a teapot!!!", headers = list(im_a = "teapot"))
+#> <webmockr stub> 
+#>   method: get
+#>   uri: https://httpbin.org/get
+#>   with: 
+#>     query: 
+#>     body: 
+#>     request_headers: Accept=application/json, text/xml, application/xml, */*
+#>   to_return: 
+#>     status: 418
+#>     body: I'm a teapot!!!
+#>     response_headers: im_a=teapot
+#>   should_timeout: FALSE
+#>   should_raise: FALSE
+```
+
+now returns mocked response
+
+
+
+```r
+(res <- GET("https://httpbin.org/get"))
+res$status_code
+#> [1] 418
+res$response_headers
+#> $im_a
+#> [1] "teapot"
 ```
 
 ## Meta
