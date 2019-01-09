@@ -6,6 +6,7 @@ webmockr
 [![cran checks](https://cranchecks.info/badges/worst/webmockr)](https://cranchecks.info/pkgs/webmockr)
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](http://www.repostatus.org/badges/latest/active.svg)](http://www.repostatus.org/#active)
 [![Build Status](https://travis-ci.org/ropensci/webmockr.svg?branch=master)](https://travis-ci.org/ropensci/webmockr)
+[![Build status](https://ci.appveyor.com/api/projects/status/47scc0vur41sbfyx?svg=true)](https://ci.appveyor.com/project/sckott/webmockr)
 [![codecov](https://codecov.io/gh/ropensci/webmockr/branch/master/graph/badge.svg)](https://codecov.io/gh/ropensci/webmockr)
 [![rstudio mirror downloads](http://cranlogs.r-pkg.org/badges/webmockr)](https://github.com/metacran/cranlogs.app)
 [![cran version](https://www.r-pkg.org/badges/version/webmockr)](https://cran.r-project.org/package=webmockr)
@@ -163,7 +164,7 @@ stub_request("get", "https://httpbin.org/get") %>%
 stub_registry()
 #> <webmockr stub registry> 
 #>  Registered Stubs
-#>    get: https://httpbin.org/get   | to_return:  with body "success!"  with status 200
+#>    GET: https://httpbin.org/get   | to_return:  with body "success!"  with status 200
 
 # make the request
 z <- crul::HttpClient$new(url = "https://httpbin.org")$get("get")
@@ -211,7 +212,7 @@ x$get('get')
 #> <crul response> 
 #>   url: https://httpbin.org/get
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.6.0
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.7.0.9100
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -247,7 +248,7 @@ x$get('get', query = list(hello = "world"))
 #> <crul response> 
 #>   url: https://httpbin.org/get?hello=world
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.6.0
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.7.0.9100
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
@@ -284,9 +285,9 @@ stub_request("get", "https://httpbin.org/get") %>%
 stub_registry()
 #> <webmockr stub registry> 
 #>  Registered Stubs
-#>    get: https://httpbin.org/get 
-#>    get: https://httpbin.org/get?hello=world   | to_return:   with status 418 
-#>    get: https://httpbin.org/get?hello=world   with headers {"User-Agent":"libcurl/7.51.0 r-curl/2.6 crul/0.3.6","Accept-Encoding":"gzip, deflate"}
+#>    GET: https://httpbin.org/get 
+#>    GET: https://httpbin.org/get?hello=world   | to_return:   with status 418 
+#>    GET: https://httpbin.org/get?hello=world   with headers {"User-Agent":"libcurl/7.51.0 r-curl/2.6 crul/0.3.6","Accept-Encoding":"gzip, deflate"}
 ```
 
 
@@ -296,7 +297,7 @@ x$get('get', query = list(hello = "world"))
 #> <crul response> 
 #>   url: https://httpbin.org/get?hello=world
 #>   request_headers: 
-#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.6.0
+#>     User-Agent: libcurl/7.54.0 r-curl/3.2 crul/0.7.0.9100
 #>     Accept-Encoding: gzip, deflate
 #>     Accept: application/json, text/xml, application/xml, */*
 #>   response_headers: 
