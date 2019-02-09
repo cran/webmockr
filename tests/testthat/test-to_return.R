@@ -49,6 +49,8 @@ test_that("stub_request fails well", {
   # headers
   expect_error(to_return(zzz, headers = list(5, 6)), "'headers' must be a named list")
   expect_error(to_return(zzz, headers = list(a = 5, 6)), "'headers' must be a named list")
+
+  expect_error(to_return(zzz, .list = 4), ".list must be of class list")
 })
 
 
@@ -142,3 +144,9 @@ test_that("to_return response header values are all character, httr", {
   expect_equal(z$headers$e, "blue")
 })
 disable()
+
+
+context("to_return_: defunct")
+test_that("to_return_: defunct", {
+  expect_error(to_return_(), "to_return")
+})

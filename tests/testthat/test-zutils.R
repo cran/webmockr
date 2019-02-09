@@ -137,10 +137,10 @@ test_that("webmockr_configure_reset", {
 
 context("util fxns: defunct")
 test_that("webmockr_disable", {
-  expect_error(webmockr_disable(), "see \\?disable")
+  expect_error(webmockr_disable(), "disable")
 })
 test_that("webmockr_enable", {
-  expect_error(webmockr_enable(), "see \\?enable")
+  expect_error(webmockr_enable(), "enable")
 })
 
 
@@ -155,8 +155,8 @@ test_that("hdl_lst works", {
   expect_error(hdl_lst(), "argument \"x\" is missing")
 
   expect_equal(hdl_lst(list(foo = "bar")), "foo=bar")
-  expect_equal(hdl_lst(list(foo = 5)), "foo=5")
-  expect_equal(hdl_lst(list(foo = 5, bar = "a")), "foo=5, bar=a")
+  expect_equal(hdl_lst(list(foo = "5")), "foo=5")
+  expect_equal(hdl_lst(list(foo = "5", bar = "a")), "foo=5, bar=a")
 
   expect_equal(hdl_lst(1.5), 1.5)
 })
