@@ -9,10 +9,15 @@
 \alias{webmockr_net_connect_allowed}
 \title{webmockr configuration}
 \usage{
-webmockr_configure(allow_net_connect = FALSE, allow_localhost = FALSE,
-  allow = NULL, net_http_connect_on_start = FALSE,
-  show_stubbing_instructions = FALSE, query_values_notation = FALSE,
-  show_body_diff = FALSE)
+webmockr_configure(
+  allow_net_connect = FALSE,
+  allow_localhost = FALSE,
+  allow = NULL,
+  net_http_connect_on_start = FALSE,
+  show_stubbing_instructions = FALSE,
+  query_values_notation = FALSE,
+  show_body_diff = FALSE
+)
 
 webmockr_configure_reset()
 
@@ -50,6 +55,14 @@ whether or not it is allowed}
 \description{
 webmockr configuration
 }
+\section{webmockr_allow_net_connect}{
+
+If there are stubs found for a request, even if net connections are
+allowed (by running \code{webmockr_allow_net_connect()}) the stubbed
+response will be returned. If no stub is found, and net connections
+are allowed, then a real HTTP request can be made.
+}
+
 \examples{
 \dontrun{
 webmockr_configure()

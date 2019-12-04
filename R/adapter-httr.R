@@ -1,77 +1,52 @@
-#' httr library adapter
-#'
+#' @title HttrAdapter
+#' @description `httr` library adapter
 #' @export
 #' @family http_lib_adapters
-#' @details
-#' **Methods**
-#'   \describe{
-#'     \item{`enable()`}{
-#'       Enable the adapter
-#'     }
-#'     \item{`disable()`}{
-#'       Disable the adapter
-#'     }
-#'     \item{`build_httr_request(x)`}{
-#'       Build a httr [RequestSignature]
-#'       x: httr request parts (list)
-#'     }
-#'     \item{`build_httr_response(req, resp)`}{
-#'       Build a httr response
-#'       req: a httr request (list)
-#'       resp: a httr response ()
-#'     }
-#'     \item{`handle_request()`}{
-#'       All logic for handling a request
-#'       req: a httr request (list)
-#'     }
-#'     \item{`remove_httr_stubs()`}{
-#'       Remove all httr stubs
-#'     }
-#'   }
-#'
-#' This adapter modifies \pkg{httr} to allow mocking HTTP requests
-#'
-#' @format NULL
-#' @usage NULL
+#' @details This adapter modifies \pkg{httr} to allow mocking HTTP requests
 #' @examples \dontrun{
 #' if (requireNamespace("httr", quietly = TRUE)) {
-#' library(httr)
+#' # library(httr)
 #'
 #' # normal httr request, works fine
-#' real <- GET("https://httpbin.org/get")
-#' real
+#' # real <- GET("https://httpbin.org/get")
+#' # real
 #'
 #' # with webmockr
-#' library(webmockr)
+#' # library(webmockr)
 #' ## turn on httr mocking
-#' httr_mock()
+#' # httr_mock()
 #' ## now this request isn't allowed
 #' # GET("https://httpbin.org/get")
 #' ## stub the request
-#' stub_request('get', uri = 'https://httpbin.org/get') %>%
-#'   wi_th(
-#'     headers = list('Accept' = 'application/json, text/xml, application/xml, */*')
-#'   ) %>%
-#'   to_return(status = 418, body = "I'm a teapot!", headers = list(a = 5))
+#' # stub_request('get', uri = 'https://httpbin.org/get') %>%
+#' #   wi_th(
+#' #     headers = list('Accept' = 'application/json, text/xml, application/xml, */*')
+#' #   ) %>%
+#' #   to_return(status = 418, body = "I'm a teapot!", headers = list(a = 5))
 #' ## now the request succeeds and returns a mocked response
-#' (res <- GET("https://httpbin.org/get"))
-#' res$status_code
-#' rawToChar(res$content)
+#' # (res <- GET("https://httpbin.org/get"))
+#' # res$status_code
+#' # rawToChar(res$content)
 #'
 #' # allow real requests while webmockr is loaded
-#' webmockr_allow_net_connect()
-#' webmockr_net_connect_allowed()
-#' GET("https://httpbin.org/get?animal=chicken")
-#' webmockr_disable_net_connect()
-#' webmockr_net_connect_allowed()
+#' # webmockr_allow_net_connect()
+#' # webmockr_net_connect_allowed()
 #' # GET("https://httpbin.org/get?animal=chicken")
+#' # webmockr_disable_net_connect()
+#' # webmockr_net_connect_allowed()
+#' # GET("https://httpbin.org/get?animal=chicken")
+#' 
+#' # httr_mock(FALSE)
 #' }
 #' }
 HttrAdapter <- R6::R6Class(
   'HttrAdapter',
   public = list(
+    #' @field name adapter name
     name = "httr_adapter",
 
+    #' @description Enable the adapter
+    #' @return `TRUE`, invisibly
     enable = function() {
       message("HttrAdapter enabled!")
       webmockr_lightswitch$httr <- TRUE
@@ -79,6 +54,8 @@ HttrAdapter <- R6::R6Class(
       invisible(TRUE)
     },
 
+    #' @description Disable the adapter
+    #' @return `FALSE`, invisibly
     disable = function() {
       message("HttrAdapter disabled!")
       webmockr_lightswitch$httr <- FALSE
@@ -87,6 +64,9 @@ HttrAdapter <- R6::R6Class(
       invisible(FALSE)
     },
 
+    #' @description All logic for handling a request
+    #' @param req a httr request
+    #' @return various outcomes
     handle_request = function(req) {
       # put request in request registry
       request_signature <- build_httr_request(req)
@@ -146,7 +126,22 @@ HttrAdapter <- R6::R6Class(
                 httr_resp$status_code <- as.integer(toadd[[i]])
               }
               if (names(toadd)[i] == "body") {
-                # httr_resp$content <- toadd[[i]]
+                if (inherits(ss$responses_sequences$body_raw, "mock_file")) {
+                  cat(ss$responses_sequences$body_raw$payload,
+                    file = ss$responses_sequences$body_raw$path,
+                    sep = "\n")
+                  ss$responses_sequences$body_raw <-
+                    structure(ss$responses_sequences$body_raw$path,
+                      class = "path")
+                }
+                if (
+                  (attr(ss$responses_sequences$body_raw, "type") %||% "")
+                  == "file"
+                ) {
+                  attr(ss$responses_sequences$body_raw, "type") <- NULL
+                  ss$responses_sequences$body_raw <-
+                    structure(ss$responses_sequences$body_raw, class = "path")
+                }
                 httr_resp$content <- ss$responses_sequences$body_raw
               }
               if (names(toadd)[i] == "headers") {
@@ -169,7 +164,13 @@ HttrAdapter <- R6::R6Class(
         # if real requests || localhost || certain exceptions ARE
         #   allowed && nothing found above
         httr_mock(FALSE)
-        httr_resp <- eval(parse(text = paste0("httr::", req$method)))(req$url)
+        httr_resp <- eval(parse(text = paste0("httr::", req$method)))(
+          req$url,
+          body = get_httr_body(req),
+          do.call(httr::config, req$options),
+          httr::add_headers(req$headers),
+          if (!is.null(req$output$path)) httr::write_disk(req$output$path, TRUE)
+        )
         httr_mock(TRUE)
 
         # if vcr loaded: record http interaction into vcr namespace
@@ -224,6 +225,8 @@ HttrAdapter <- R6::R6Class(
       return(httr_resp)
     },
 
+    #' @description Remove all crul stubs
+    #' @return nothing returned; removes all httr request stubs
     remove_httr_stubs = function() {
       webmockr_stub_registry$remove_all_request_stubs()
     }
@@ -344,7 +347,8 @@ build_httr_request = function(x) {
       body = x$fields %||% NULL,
       headers = as.list(x$headers) %||% NULL,
       proxies = x$proxies %||% NULL,
-      auth = x$auth %||% NULL
+      auth = x$auth %||% NULL,
+      disk = x$disk %||% NULL
     )
   )
 }
@@ -364,5 +368,29 @@ httr_mock <- function(on = TRUE) {
     httr::set_callback("request", webmockr_handle)
   } else {
     httr::set_callback("request", NULL)
+  }
+}
+
+# copied over from vcr
+get_httr_body <- function(x) {
+  if (
+    is.null(x$fields) && {
+      if (is.null(x$options$postfieldsize)) return(FALSE)
+      x$options$postfieldsize == 0
+    }
+  ) {
+    return(NULL)
+  }
+  if (!is.null(x$fields)) {
+    form_file_comp <- vapply(x$fields, inherits, logical(1), "form_file")
+    if (any(form_file_comp)) {
+      ff <- x$fields[form_file_comp][[1]]
+      return(ff)
+    } else {
+      return(x$fields)
+    }
+  }
+  if (!is.null(x$options$postfields)) {
+    if (is.raw(x$options$postfields)) return(rawToChar(x$options$postfields))
   }
 }
