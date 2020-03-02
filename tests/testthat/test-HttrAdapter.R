@@ -16,10 +16,10 @@ test_that("HttrAdapter bits are correct", {
   expect_is(aa$disable, "function")
   expect_is(aa$enable, "function")
   expect_is(aa$handle_request, "function")
-  expect_is(aa$remove_httr_stubs, "function")
+  expect_is(aa$remove_stubs, "function")
   expect_is(aa$name, "character")
 
-  expect_equal(aa$name, "httr_adapter")
+  expect_equal(aa$name, "HttrAdapter")
 })
 
 
@@ -38,6 +38,31 @@ test_that("build_httr_request/response fail well", {
   expect_error(build_httr_response(), "argument \"req\" is missing")
 })
 
+test_that("HttrAdapter: works when vcr is loaded but no cassette is inserted", {
+  skip_on_cran()
+  skip_if_not_installed("vcr")
+  
+  webmockr::enable(adapter = "httr")
+  on.exit({
+    webmockr::disable(adapter = "httr")
+    unloadNamespace("vcr")
+  })
+  
+  stub_request("get", "https://httpbin.org/get")
+  library("vcr")
+  
+  # works when no cassette is loaded
+  expect_silent(x <- httr::GET("https://httpbin.org/get"))
+  expect_is(x, "response")
+  
+  # # works when empty cassette is loaded
+  vcr::vcr_configure(dir = tempdir())
+  vcr::insert_cassette("empty")
+  expect_silent(x <- httr::GET("https://httpbin.org/get"))
+  vcr::eject_cassette("empty")
+  expect_is(x, "response")
+})
+
 # library(httr)
 # z <- GET("https://httpbin.org/get")
 # httr_obj <- z$request
@@ -51,7 +76,7 @@ test_that("HttrAdapter date slot works", {
 
   path <- file.path(tempdir(), "foobar")
   vcr::vcr_configure(dir = path)
-  vcr::use_cassette("test-date", GET("https://httpbin.org/get"))
+  vcr::use_cassette("test-date", httr::GET("https://httpbin.org/get"))
   # list.files(path)
   # readLines(file.path(path, "test-date.yml"))
   vcr::insert_cassette("test-date")
@@ -266,7 +291,7 @@ test_that("httr works with webmockr_allow_net_connect", {
     to_return(body = "yum=cheese")
   x <- httr::GET("https://httpbin.org/get?stuff=things")
   expect_true(httr::content(x, "text", encoding="UTF-8") == "yum=cheese")
-  
+
   # allow net connect - stub still exists though - so not a real request
   webmockr_allow_net_connect()
   z <- httr::GET("https://httpbin.org/get?stuff=things")
@@ -302,3 +327,30 @@ test_that("httr requests with bodies work", {
   webmockr_disable_net_connect()
 })
 
+test_that("httr requests with JSON-encoded bodies work", {
+  skip_on_cran()
+
+  on.exit(disable(adapter = "httr"))
+  enable(adapter = "httr")
+
+  stub_registry_clear()
+  body <- list(foo = "bar")
+  z <- stub_request("post", uri = "https://httpbin.org/post") %>%
+    wi_th(body = jsonlite::toJSON(body, auto_unbox = TRUE))
+
+  # encoded body works
+  res <- httr::POST("https://httpbin.org/post", body = body, encode = "json")
+  expect_is(res, "response")
+
+  # encoded but modified body fails
+  expect_error(
+    httr::POST("https://httpbin.org/post", body = list(foo = "bar1"), encode = "json"),
+    "Unregistered request"
+  )
+
+  # unencoded body fails
+  expect_error(
+    httr::POST("https://httpbin.org/post", body = body),
+    "Unregistered request"
+  )
+})

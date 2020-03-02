@@ -2,11 +2,13 @@
 #'
 #' @importFrom R6 R6Class
 #' @importFrom fauxpas HTTPRequestTimeout
+#' @importFrom crul mock
 #' @name webmockr-package
 #' @aliases webmockr
 #' @docType package
 #' @keywords package
 #' @author Scott Chamberlain \email{myrmecocystus+r@@gmail.com}
+#' @author Aaron Wolen
 #'
 #' @section Features:
 #'

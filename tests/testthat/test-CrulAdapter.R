@@ -13,10 +13,10 @@ test_that("CrulAdapter bits are correct", {
   expect_is(aa$disable, "function")
   expect_is(aa$enable, "function")
   expect_is(aa$handle_request, "function")
-  expect_is(aa$remove_crul_stubs, "function")
+  expect_is(aa$remove_stubs, "function")
   expect_is(aa$name, "character")
 
-  expect_equal(aa$name, "crul_adapter")
+  expect_equal(aa$name, "CrulAdapter")
 })
 
 
@@ -35,6 +35,32 @@ test_that("build_crul_request/response fail well", {
   expect_error(build_crul_response(), "argument \"resp\" is missing")
 })
 
+test_that("CrulAdapter: works when vcr is loaded but no cassette is inserted", {
+  skip_on_cran()
+  skip_if_not_installed("vcr")
+  
+  webmockr::enable(adapter = "crul")
+  on.exit({
+    webmockr::disable(adapter = "crul")
+    unloadNamespace("vcr")
+  })
+  
+  stub_request("get", "https://httpbin.org/get")
+  library("vcr")
+  
+  # works when no cassette is loaded
+  cli <- crul::HttpClient$new("https://httpbin.org")
+  
+  expect_silent(x <- cli$get("get"))
+  expect_is(x, "HttpResponse")
+
+  # works when empty cassette is loaded
+  vcr::vcr_configure(dir = tempdir())
+  vcr::insert_cassette("empty")
+  expect_silent(x <- cli$get("get"))
+  vcr::eject_cassette("empty")
+  expect_is(x, "HttpResponse")
+})
 
 context("CrulAdapter - with real data")
 test_that("CrulAdapter works", {
@@ -148,4 +174,35 @@ test_that("CrulAdapter works", {
   #     status = 'HTTP/1.1 200 OK'
   #   )
   # ))
+})
+
+test_that("crul requests with JSON-encoded bodies work", {
+  skip_on_cran()
+
+  on.exit(disable(adapter = "crul"))
+  enable(adapter = "crul")
+  
+  body <- list(foo = "bar")
+  url <- "https://httpbin.org"
+
+  cli <- crul::HttpClient$new(url)
+
+  z <- stub_request("post", uri = file.path(url, "post")) %>%
+    wi_th(body = jsonlite::toJSON(body, auto_unbox = TRUE))
+
+  # encoded body works
+  res <- cli$post("post", body = body, encode = "json")
+  expect_is(res, "HttpResponse")
+
+  # encoded but modified body fails
+  expect_error(
+    cli$post("post", body = list(foo = "bar1"), encode = "json"),
+    "Unregistered request"
+  )
+
+  # unencoded body fails
+  expect_error(
+    cli$post("post", body = body),
+    "Unregistered request"
+  )
 })
