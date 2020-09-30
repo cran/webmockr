@@ -7,10 +7,9 @@ webmockr
 
 [![cran checks](https://cranchecks.info/badges/worst/webmockr)](https://cranchecks.info/pkgs/webmockr)
 [![Project Status: Active - The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
-[![Build Status](https://travis-ci.org/ropensci/webmockr.svg?branch=master)](https://travis-ci.org/ropensci/webmockr)
-[![Build status](https://ci.appveyor.com/api/projects/status/47scc0vur41sbfyx?svg=true)](https://ci.appveyor.com/project/sckott/webmockr)
+[![R-CMD-check](https://github.com/ropensci/webmockr/workflows/R-CMD-check/badge.svg)](https://github.com/ropensci/webmockr/actions/)
 [![codecov](https://codecov.io/gh/ropensci/webmockr/branch/master/graph/badge.svg)](https://codecov.io/gh/ropensci/webmockr)
-[![rstudio mirror downloads](https://cranlogs.r-pkg.org/badges/webmockr)](https://github.com/metacran/cranlogs.app)
+[![rstudio mirror downloads](https://cranlogs.r-pkg.org/badges/webmockr)](https://github.com/r-hub/cranlogs.app)
 [![cran version](https://www.r-pkg.org/badges/version/webmockr)](https://cran.r-project.org/package=webmockr)
 
 
@@ -449,11 +448,9 @@ Writing to disk is supported in both `crul` and `httr`
 * Please [report any issues or bugs](https://github.com/ropensci/webmockr/issues).
 * License: MIT
 * Get citation information for `webmockr` in R doing `citation(package = 'webmockr')`
-* Please note that this project is released with a [Contributor Code of Conduct][coc].
-By participating in this project you agree to abide by its terms.
+* Please note that this package is released with a [Contributor Code of Conduct](https://ropensci.org/code-of-conduct/). By contributing to this project, you agree to abide by its terms.
 
 [![ropensci_footer](https://ropensci.org/public_images/github_footer.png)](https://ropensci.org)
 
 
 [vcr]: https://github.com/ropensci/vcr
-[coc]: https://github.com/ropensci/webmockr/blob/master/CODE_OF_CONDUCT.md

@@ -16,10 +16,30 @@ x$to_return(status = 200, body = "foobar", headers = list(a = 5))
 x
 x$to_s()
 
+# many to_return's
+x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
+x$to_return(status = 200, body = "foobar", headers = list(a = 5))
+x$to_return(status = 200, body = "bears", headers = list(b = 6))
+x
+x$to_s()
+
 # raw body
 x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
 x$to_return(status = 200, body = raw(0), headers = list(a = 5))
 x$to_s()
+x
+
+x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
+x$to_return(status = 200, body = charToRaw("foo bar"),
+  headers = list(a = 5))
+x$to_s()
+x
+
+# basic auth
+x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
+x$with(basic_auth = c("foo", "bar"))
+x$to_s()
+x
 
 # file path
 x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
@@ -42,7 +62,7 @@ unlink(f)
 # uri_regex
 (x <- StubbedRequest$new(method = "get", uri_regex = ".+ossref.org"))
 x$method
-x$uri
+x$uri_regex
 x$to_s()
 
 # to timeout
@@ -50,6 +70,7 @@ x$to_s()
 x$to_s()
 x$to_timeout()
 x$to_s()
+x
 
 # to raise
 library(fauxpas)
@@ -57,6 +78,7 @@ library(fauxpas)
 x$to_s()
 x$to_raise(HTTPBadGateway)
 x$to_s()
+x
 }
 }
 \seealso{
@@ -79,6 +101,8 @@ x$to_s()
 
 \item{\code{body}}{(xx) xx}
 
+\item{\code{basic_auth}}{(xx) xx}
+
 \item{\code{request_headers}}{(xx) xx}
 
 \item{\code{response_headers}}{(xx) xx}
@@ -86,12 +110,6 @@ x$to_s()
 \item{\code{responses_sequences}}{(xx) xx}
 
 \item{\code{status_code}}{(xx) xx}
-
-\item{\code{timeout}}{(xx) xx}
-
-\item{\code{exceptions}}{(xx) xx}
-
-\item{\code{raise}}{(xx) xx}
 }
 \if{html}{\out{</div>}}
 }
@@ -124,7 +142,9 @@ Create a new \code{StubbedRequest} object
 patch, or delete). "any" matches any HTTP method. required.}
 
 \item{\code{uri}}{(character) request URI. either this or \code{uri_regex}
-required}
+required. \pkg{webmockr} can match uri's without the "http" scheme,
+but does not match if the scheme is "https". required, unless
+\code{uri_regex} given. See \link{UriPattern} for more.}
 
 \item{\code{uri_regex}}{(character) request URI as regex. either this or \code{uri}
 required}
@@ -160,7 +180,12 @@ print method for the \code{StubbedRequest} class
 \subsection{Method \code{with()}}{
 Set expectations for what's given in HTTP request
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{StubbedRequest$with(query = NULL, body = NULL, headers = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{StubbedRequest$with(
+  query = NULL,
+  body = NULL,
+  headers = NULL,
+  basic_auth = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -171,6 +196,8 @@ Set expectations for what's given in HTTP request
 \item{\code{body}}{(list) request body, as a named list. optional}
 
 \item{\code{headers}}{(list) request headers as a named list. optional.}
+
+\item{\code{basic_auth}}{(character) basic authentication. optional.}
 }
 \if{html}{\out{</div>}}
 }

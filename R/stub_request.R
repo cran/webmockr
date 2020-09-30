@@ -3,9 +3,12 @@
 #' @export
 #' @param method (character) HTTP method, one of "get", "post", "put", "patch",
 #' "head", "delete", "options" - or the special "any" (for any method)
-#' @param uri (character) The request uri. Can be a full uri, partial, or a
-#' regular expression to match many incantations of a uri. required.
-#' @param uri_regex (character) A URI represented as regex. See examples
+#' @param uri (character) The request uri. Can be a full or partial uri.
+#' \pkg{webmockr} can match uri's without the "http" scheme, but does
+#' not match if the scheme is "https". required, unless `uri_regex` given.
+#' See [UriPattern] for more.
+#' @param uri_regex (character) A URI represented as regex. required, if `uri`
+#' not given. See examples
 #' @return an object of class `StubbedRequest`, with print method describing
 #' the stub.
 #' @details Internally, this calls [StubbedRequest] which handles the logic
@@ -17,6 +20,20 @@
 #' If multiple stubs match the same request, we use the first stub. So if you
 #' want to use a stub that was created after an earlier one that matches,
 #' remove the earlier one(s).
+#' 
+#' Note on `wi_th()`: If you pass `query` values are coerced to character
+#' class in the recorded stub. You can pass numeric, integer, etc., but
+#' all will be coerced to character.
+#' 
+#' See [wi_th()] for details on request body/query/headers and
+#' [to_return()] for details on how response status/body/headers
+#' are handled
+#' 
+#' @section Matching URI's:
+#' - Trailing slashes are dropped from stub URIs before matching
+#' - Query parameters are dropped from stub URIs before matching;
+#' URIs are compared without query parameters
+#' 
 #' @section Mocking writing to disk:
 #' See [mocking-disk-writing]
 #' @seealso [wi_th()], [to_return()], [to_timeout()], [to_raise()],
@@ -97,6 +114,25 @@
 #' x$post('post')
 #' x$put('put', body = list(foo = 'bar'))
 #' x$get('put', query = list(stuff = 3423234L))
+#' 
+#' # many responses
+#' ## the first response matches the first to_return call, and so on
+#' stub_request("get", "https://httpbin.org/get") %>% 
+#'   to_return(status = 200, body = "foobar", headers = list(a = 5)) %>% 
+#'   to_return(status = 200, body = "bears", headers = list(b = 6))
+#' con <- crul::HttpClient$new(url = "https://httpbin.org")
+#' con$get("get")$parse("UTF-8")
+#' con$get("get")$parse("UTF-8")
+#' 
+#' ## OR, use times with to_return() to repeat the same response many times
+#' library(fauxpas)
+#' stub_request("get", "https://httpbin.org/get") %>% 
+#'   to_return(status = 200, body = "apple-pie", times = 2) %>% 
+#'   to_raise(HTTPUnauthorized)
+#' con <- crul::HttpClient$new(url = "https://httpbin.org")
+#' con$get("get")$parse("UTF-8")
+#' con$get("get")$parse("UTF-8")
+#' con$get("get")$parse("UTF-8")
 #'
 #' # clear all stubs
 #' stub_registry()

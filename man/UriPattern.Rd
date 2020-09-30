@@ -9,44 +9,73 @@ uri matcher
 \examples{
 # trailing slash
 (z <- UriPattern$new(pattern = "http://foobar.com"))
-z$matches("http://foobar.com")
-z$matches("http://foobar.com/")
+z$matches("http://foobar.com") # TRUE
+z$matches("http://foobar.com/") # TRUE
+
+# without scheme
+## matches http by default: does not match https by default
+(z <- UriPattern$new(pattern = "foobar.com"))
+z$matches("http://foobar.com") # TRUE
+z$matches("http://foobar.com/") # TRUE
+z$matches("https://foobar.com") # FALSE
+z$matches("https://foobar.com/") # FALSE
+## to match https, you'll have to give the complete url
+(z <- UriPattern$new(pattern = "https://foobar.com"))
+z$matches("https://foobar.com/") # TRUE
+z$matches("http://foobar.com/") # FALSE
 
 # default ports
 (z <- UriPattern$new(pattern = "http://foobar.com"))
-z$matches("http://foobar.com:80")
-z$matches("http://foobar.com:80/")
-z$matches("http://foobar.com:443")
-z$matches("http://foobar.com:443/")
+z$matches("http://foobar.com:80") # TRUE
+z$matches("http://foobar.com:80/") # TRUE
+z$matches("http://foobar.com:443") # TRUE
+z$matches("http://foobar.com:443/") # TRUE
 
-# user info
+# user info - FIXME, not sure we support this yet
 (z <- UriPattern$new(pattern = "http://foobar.com"))
 z$matches("http://user:pass@foobar.com")
 
 # regex
 (z <- UriPattern$new(regex_pattern = ".+ample\\\\.."))
-z$matches("http://sample.org")
-z$matches("http://example.com")
-z$matches("http://tramples.net")
+z$matches("http://sample.org") # TRUE
+z$matches("http://example.com") # TRUE
+z$matches("http://tramples.net") # FALSE
 
 # add query parameters
 (z <- UriPattern$new(pattern = "http://foobar.com"))
 z$add_query_params(list(pizza = "cheese", cheese = "cheddar"))
+z
 z$pattern
+z$matches("http://foobar.com?pizza=cheese&cheese=cheddar") # TRUE
+z$matches("http://foobar.com?pizza=cheese&cheese=swiss") # FALSE
 
-(z <- UriPattern$new(pattern = "http://foobar.com"))
+# query parameters in the uri
+(z <- UriPattern$new(pattern = "https://httpbin.org/get?stuff=things"))
+z$add_query_params() # have to run this method to gather query params
+z$matches("https://httpbin.org/get?stuff=things") # TRUE
+z$matches("https://httpbin.org/get?stuff2=things") # FALSE
+
+# regex add query parameters
+(z <- UriPattern$new(regex_pattern = "https://foobar.com/.+/order"))
+z$add_query_params(list(pizza = "cheese"))
+z
 z$pattern
-z$add_query_params(list(pizza = "deep dish", cheese = "cheddar"))
-z$pattern
+z$matches("https://foobar.com/pizzas/order?pizza=cheese") # TRUE
+z$matches("https://foobar.com/pizzas?pizza=cheese") # FALSE
+
+# query parameters in the regex uri
+(z <- UriPattern$new(regex_pattern = "https://x.com/.+/order?fruit=apple"))
+z$add_query_params() # have to run this method to gather query params
+z$matches("https://x.com/a/order?fruit=apple") # TRUE
+z$matches("https://x.com/a?fruit=apple") # FALSE
 
 # any pattern
-(z <- UriPattern$new(regex_pattern = ".+"))
+(z <- UriPattern$new(regex_pattern = "stuff\\\\.com.+"))
 z$regex
 z$pattern
-z$matches("http://stuff.com")
-z$matches("https://stuff.com")
-z$matches("https://stuff.com/stff")
-z$matches("https://stuff.com/apple?bears=3")
+z$matches("http://stuff.com") # FALSE
+z$matches("https://stuff.com/stff") # TRUE
+z$matches("https://stuff.com/apple?bears=brown&bats=grey") # TRUE
 }
 \keyword{internal}
 \section{Public fields}{
@@ -55,6 +84,8 @@ z$matches("https://stuff.com/apple?bears=3")
 \item{\code{pattern}}{(character) pattern holder}
 
 \item{\code{regex}}{a logical}
+
+\item{\code{query_params}}{a list, or \code{NULL} if empty}
 }
 \if{html}{\out{</div>}}
 }
@@ -63,6 +94,9 @@ z$matches("https://stuff.com/apple?bears=3")
 \itemize{
 \item \href{#method-new}{\code{UriPattern$new()}}
 \item \href{#method-matches}{\code{UriPattern$matches()}}
+\item \href{#method-pattern_matches}{\code{UriPattern$pattern_matches()}}
+\item \href{#method-query_params_matches}{\code{UriPattern$query_params_matches()}}
+\item \href{#method-extract_query}{\code{UriPattern$extract_query()}}
 \item \href{#method-add_query_params}{\code{UriPattern$add_query_params()}}
 \item \href{#method-to_s}{\code{UriPattern$to_s()}}
 \item \href{#method-clone}{\code{UriPattern$clone()}}
@@ -111,6 +145,66 @@ Match a list of headers against that stored
 }
 \subsection{Returns}{
 a boolean
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-pattern_matches"></a>}}
+\if{latex}{\out{\hypertarget{method-pattern_matches}{}}}
+\subsection{Method \code{pattern_matches()}}{
+Match a URI
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{UriPattern$pattern_matches(uri)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{uri}}{(character) a uri}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a boolean
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-query_params_matches"></a>}}
+\if{latex}{\out{\hypertarget{method-query_params_matches}{}}}
+\subsection{Method \code{query_params_matches()}}{
+Match query parameters of a URI
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{UriPattern$query_params_matches(uri)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{uri}}{(character) a uri}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+a boolean
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-extract_query"></a>}}
+\if{latex}{\out{\hypertarget{method-extract_query}{}}}
+\subsection{Method \code{extract_query()}}{
+Extract query parameters as a named list
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{UriPattern$extract_query(uri)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{uri}}{(character) a uri}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+named list, or \code{NULL} if no query parameters
 }
 }
 \if{html}{\out{<hr>}}

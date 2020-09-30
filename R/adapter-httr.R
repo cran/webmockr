@@ -11,7 +11,7 @@ build_httr_response <- function(req, resp) {
     url = try_url %|s|% req$url,
     status_code = as.integer(resp$status_code),
     headers = {
-      if (grepl("^ftp://", resp$url)) {
+      if (grepl("^ftp://", resp$url %||% "")) { # in case uri_regex only
         list()
       } else {
         hds <- resp$headers
@@ -65,14 +65,20 @@ httr_cookies_df <- function() {
 #' @param x an unexecuted httr request object
 #' @return a httr request
 build_httr_request = function(x) {
+  headers <- as.list(x$headers) %||% NULL
+  auth <- x$options$userpwd %||% NULL
+  if (!is.null(auth)) {
+    auth_header <- prep_auth(strsplit(auth, ":")[[1]])
+    headers <- c(headers, auth_header)
+  }
   RequestSignature$new(
     method = x$method,
     uri = x$url,
     options = list(
       body = pluck_body(x),
-      headers = as.list(x$headers) %||% NULL,
+      headers = headers,
       proxies = x$proxies %||% NULL,
-      auth = x$auth %||% NULL,
+      auth = auth,
       disk = x$disk %||% NULL
     )
   )
