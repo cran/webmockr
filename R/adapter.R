@@ -65,9 +65,11 @@ Adapter <- R6::R6Class("Adapter",
     },
 
     #' @description Enable the adapter
+    #' @param quiet (logical) suppress messages? default: `FALSE`
     #' @return `TRUE`, invisibly
-    enable = function() {
-      message(sprintf("%s enabled!", self$name))
+    enable = function(quiet = FALSE) {
+      assert(quiet, "logical")
+      if (!quiet) message(sprintf("%s enabled!", self$name))
       webmockr_lightswitch[[self$client]] <- TRUE
       
       switch(self$client,
@@ -77,9 +79,11 @@ Adapter <- R6::R6Class("Adapter",
     },
 
     #' @description Disable the adapter
+    #' @param quiet (logical) suppress messages? default: `FALSE`
     #' @return `FALSE`, invisibly
-    disable = function() {
-      message(sprintf("%s disabled!", self$name))
+    disable = function(quiet = FALSE) {
+      assert(quiet, "logical")
+      if (!quiet) message(sprintf("%s disabled!", self$name))
       webmockr_lightswitch[[self$client]] <- FALSE
       self$remove_stubs()
 
@@ -113,6 +117,7 @@ Adapter <- R6::R6Class("Adapter",
         # VCR: recordable/ignored
 
         if (vcr_cassette_inserted()) {
+          # req <- handle_separate_redirects(req)
           # use RequestHandler - gets current cassette & record interaction
           resp <- private$request_handler(req)$handle()
 
@@ -137,6 +142,7 @@ Adapter <- R6::R6Class("Adapter",
         # if vcr loaded: record http interaction into vcr namespace
         # VCR: recordable
         if (vcr_loaded()) {
+          # req <- handle_separate_redirects(req)
           # use RequestHandler instead? - which gets current cassette for us
           resp <- private$request_handler(req)$handle()
           
@@ -164,6 +170,10 @@ Adapter <- R6::R6Class("Adapter",
             tmp <- stub_request(req$method, req_url)
             wi_th(tmp, .list = list(query = urip$parameter, headers = req$headers))
           }
+
+          # check if new request/response from redirects in vcr
+          # req <- redirects_request(req)
+          # resp <- redirects_response(resp)
 
         } else {
           private$mock(on = FALSE)
