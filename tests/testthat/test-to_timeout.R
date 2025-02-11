@@ -9,7 +9,6 @@ test_that("no stubs exist before stub_request called", {
 aa <- stub_request("get", hb("/get")) %>% to_timeout()
 
 test_that("stub_request bits are correct", {
-
   expect_is(aa, "StubbedRequest")
   expect_null(aa$body)
   expect_null(aa$host)
@@ -34,7 +33,7 @@ test_that("stubs exist after stub_request called", {
 
 test_that("stub_request fails well", {
   expect_error(to_timeout(), "argument \".data\" is missing")
-  expect_error(to_timeout(5), ".data must be of class StubbedRequest")
+  expect_error(to_timeout(5), "must be of class StubbedRequest")
 })
 
 # cleanup

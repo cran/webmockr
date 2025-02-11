@@ -13,7 +13,7 @@
 #' x$put(z)
 #' x$get(z)
 HashCounter <- R6::R6Class(
-  'HashCounter',
+  "HashCounter",
   public = list(
     #' @field hash (list) a list for internal use only, with elements
     #' `key`, `sig`, and `count`
@@ -24,7 +24,7 @@ HashCounter <- R6::R6Class(
     #' @return nothing returned; registers request and iterates
     #' internal counter
     put = function(req_sig) {
-      assert(req_sig, "RequestSignature")
+      assert_is(req_sig, "RequestSignature")
       key <- req_sig$to_s()
       self$hash[[key]] <- list(
         key = key,
@@ -37,7 +37,7 @@ HashCounter <- R6::R6Class(
     #' @param req_sig an object of class `RequestSignature`
     #' @return (integer) the count of how many times the request has been made
     get = function(req_sig) {
-      assert(req_sig, "RequestSignature")
+      assert_is(req_sig, "RequestSignature")
       self$hash[[req_sig$to_s()]]$count %||% 0
     }
   )
@@ -84,7 +84,7 @@ HashCounter <- R6::R6Class(
 #' x$times_executed(z)
 #' w <- RequestPattern$new(method = "post", uri = "https://httpbin.org/post")
 #' x$times_executed(w)
-#' 
+#'
 #' ## pattern with no matches - returns 0 (zero)
 #' pat <- RequestPattern$new(
 #'   method = "get",
@@ -96,32 +96,31 @@ HashCounter <- R6::R6Class(
 #' # reset the request registry
 #' x$reset()
 RequestRegistry <- R6::R6Class(
-  'RequestRegistry',
+  "RequestRegistry",
   public = list(
-     #' @field request_signatures a HashCounter object
+    #' @field request_signatures a HashCounter object
     request_signatures = HashCounter$new(),
 
     #' @description print method for the `RequestRegistry` class
     #' @param x self
     #' @param ... ignored
     print = function(x, ...) {
-      cat("<webmockr request registry> ", sep = "\n")
-      cat(" Registered Requests", sep = "\n")
+      cat_line("<webmockr request registry> ")
+      cat_line(" Registered Requests")
       for (i in seq_along(self$request_signatures$hash)) {
-        cat(
+        cat_line(
           sprintf(
             "  %s was made %s times\n",
             names(self$request_signatures$hash)[i],
             self$request_signatures$hash[[i]]$count
-          ),
-          sep = "\n"
+          )
         )
       }
       invisible(self$request_signatures$hash)
     },
 
     #' @description Reset the registry to no registered requests
-    #' @return nothing returned; ressets registry to no requests
+    #' @return nothing returned; resets registry to no requests
     reset = function() {
       self$request_signatures <- HashCounter$new()
     },
@@ -141,9 +140,13 @@ RequestRegistry <- R6::R6Class(
     times_executed = function(request_pattern) {
       bools <- c()
       for (i in seq_along(self$request_signatures$hash)) {
-        bools[i] <- request_pattern$matches(self$request_signatures$hash[[i]]$sig)
+        bools[i] <- request_pattern$matches(
+          self$request_signatures$hash[[i]]$sig
+        )
       }
-      if (all(!bools)) return(0)
+      if (all(!bools)) {
+        return(0)
+      }
       self$request_signatures$hash[bools][[1]]$count
     }
   )

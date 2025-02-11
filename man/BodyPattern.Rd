@@ -30,28 +30,53 @@ z$matches(bb$body)
 ## upload NOT in a list
 bb <- RequestSignature$new(
   method = "post", uri = "https:/httpbin.org/post",
-  options = list(body = crul::upload(system.file("CITATION"))))
+  options = list(body = crul::upload(system.file("CITATION")))
+)
 bb$body
-z <- BodyPattern$new(pattern = 
-  crul::upload(system.file("CITATION")))
+z <- BodyPattern$new(
+  pattern =
+    crul::upload(system.file("CITATION"))
+)
 z$pattern
 z$matches(bb$body)
 
 ## upload in a list
 bb <- RequestSignature$new(
   method = "post", uri = "https:/httpbin.org/post",
-  options = list(body = list(y = crul::upload(system.file("CITATION")))))
+  options = list(body = list(y = crul::upload(system.file("CITATION"))))
+)
 bb$body
-z <- BodyPattern$new(pattern =
-  list(y = crul::upload(system.file("CITATION"))))
+z <- BodyPattern$new(
+  pattern =
+    list(y = crul::upload(system.file("CITATION")))
+)
 z$pattern
 z$matches(bb$body)
+
+# partial matching
+## including
+partial_incl <- including(list(foo = "bar"))
+z <- BodyPattern$new(pattern = partial_incl)
+z$pattern
+z$matches(list(foo = "bar", a = 5)) # TRUE
+
+## excluding
+partial_excl <- excluding(list(hello = "world"))
+z <- BodyPattern$new(pattern = partial_excl)
+z$pattern
+z$matches(list(a = 5)) # TRUE
+z$matches(list(hello = "mars", a = 5)) # TRUE
+z$matches(list(hello = "world")) # FALSE
 }
 \keyword{internal}
 \section{Public fields}{
 \if{html}{\out{<div class="r6-fields">}}
 \describe{
 \item{\code{pattern}}{a list}
+
+\item{\code{partial}}{bool, default: \code{FALSE}}
+
+\item{\code{partial_type}}{a string, default: NULL}
 }
 \if{html}{\out{</div>}}
 }
@@ -76,7 +101,8 @@ Create a new \code{BodyPattern} object
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{pattern}}{(list) a body object}
+\item{\code{pattern}}{(list) a body object - from a request stub (i.e.,
+the mock)}
 }
 \if{html}{\out{</div>}}
 }
@@ -96,7 +122,7 @@ Match a request body pattern against a pattern
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{body}}{(list) the body}
+\item{\code{body}}{(list) the body, i.e., from the HTTP request}
 
 \item{\code{content_type}}{(character) content type}
 }

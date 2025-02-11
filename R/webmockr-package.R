@@ -13,7 +13,7 @@
 #' stub_request("get", "https://httpbin.org/get")
 #' stub_request("post", "https://httpbin.org/post")
 #' stub_registry()
-#' 
+#'
 #' @keywords internal
 "_PACKAGE"
 
@@ -21,6 +21,8 @@
 #' @importFrom R6 R6Class
 #' @importFrom fauxpas HTTPRequestTimeout
 #' @importFrom crul mock
-#' @importFrom base64enc base64encode
+#' @importFrom rlang abort warn check_installed is_list is_function is_error
+#' caller_arg try_fetch caller_env
+#' @importFrom cli cli_abort ansi_collapse format_error cat_line
 ## usethis namespace: end
 NULL

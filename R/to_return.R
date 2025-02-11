@@ -8,12 +8,12 @@
 #' @param ... Comma separated list of named variables. accepts the following:
 #' `status`, `body`, `headers`. See Details for more.
 #' @param .list named list, has to be one of 'status', 'body',
-#' and/or 'headers'. An alternative to passing in via `...`. Don't pass the 
+#' and/or 'headers'. An alternative to passing in via `...`. Don't pass the
 #' same thing to both, e.g. don't pass 'status' to `...`, and also 'status' to
 #' this parameter
 #' @param times (integer) number of times the given response should be
 #' returned; default: 1. value must be greater than or equal to 1. Very large
-#' values probably don't make sense, but there's no maximum value. See 
+#' values probably don't make sense, but there's no maximum value. See
 #' Details.
 #' @return an object of class `StubbedRequest`, with print method describing
 #' the stub
@@ -30,15 +30,15 @@
 #' are all of type character. if numeric/integer values are given
 #' (e.g., `to_return(headers = list(a = 10))`), we'll coerce any
 #' numeric/integer values to character.
-#' 
+#'
 #' @section multiple `to_return()`:
 #' You can add more than one `to_return()` to a webmockr stub (including
-#' [to_raise()], [to_timeout()]). Each one is a HTTP response returned. 
+#' [to_raise()], [to_timeout()]). Each one is a HTTP response returned.
 #' That is, you'll match to an HTTP request based on `stub_request()` and
 #' `wi_th()`; the first time the request is made, the first response
-#' is returned; the second time the reqeust is made, the second response
+#' is returned; the second time the request is made, the second response
 #' is returned; and so on.
-#' 
+#'
 #' Be aware that webmockr has to track number of requests
 #' (see [request_registry()]), and so if you use multiple `to_return()`
 #' or the `times` parameter, you must clear the request registry
@@ -46,9 +46,9 @@
 #' [webmockr_reset()] clears the stub registry and  the request registry,
 #' after which you can use multiple responses again (after creating
 #' your stub(s) again of course)
-#' 
+#'
 #' @inheritSection to_raise Raise vs. Return
-#' 
+#'
 #' @examples
 #' # first, make a stub object
 #' foo <- function() {
@@ -60,35 +60,42 @@
 #' foo() %>% to_return(body = "stuff")
 #' foo() %>% to_return(body = list(a = list(b = "world")))
 #' foo() %>% to_return(headers = list(a = 5))
-#' foo() %>% 
+#' foo() %>%
 #'   to_return(status = 200, body = "stuff", headers = list(a = 5))
-#' 
+#'
 #' # .list - pass in a named list instead
 #' foo() %>% to_return(.list = list(body = list(foo = "bar")))
-#' 
+#'
 #' # multiple responses using chained `to_return()`
-#' foo() %>% to_return(body = "stuff") %>% to_return(body = "things")
-#' 
+#' foo() %>%
+#'   to_return(body = "stuff") %>%
+#'   to_return(body = "things")
+#'
 #' # many of the same response using the times parameter
 #' foo() %>% to_return(body = "stuff", times = 3)
 to_return <- function(.data, ..., .list = list(), times = 1) {
-  assert(.data, "StubbedRequest")
-  assert(.list, "list")
-  assert(times, c("integer", "numeric"))
-  assert_gte(times, 1)
-  z <- list(...)
-  if (length(z) == 0) z <- NULL
-  z <- c(z, .list)
-  if (
-    !any(c("status", "body", "headers") %in% names(z)) &&
-    length(z) != 0
-  ) {
-    stop("'to_return' only accepts status, body, headers")
-  }
-  assert(z$status, c("numeric", "integer"))
-  assert(z$headers, "list")
-  if (!all(hz_namez(z$headers))) stop("'headers' must be a named list")
-  replicate(times,
-    .data$to_return(status = z$status, body = z$body, headers = z$headers))
+  handle_stub_removal(.data, {
+    assert_is(.data, "StubbedRequest")
+    assert_stub_registered(.data)
+    assert_is(.list, "list")
+    assert_is(times, c("integer", "numeric"))
+    assert_gte(times, 1)
+    z <- list(...)
+    if (length(z) == 0) z <- NULL
+    z <- c(z, .list)
+    if (
+      !any(c("status", "body", "headers") %in% names(z)) &&
+        length(z) != 0
+    ) {
+      abort("'to_return' only accepts status, body, headers")
+    }
+    assert_is(z$status, c("numeric", "integer"))
+    assert_is(z$headers, "list")
+    if (!all(hz_namez(z$headers))) abort("'headers' must be a named list")
+    replicate(
+      times,
+      .data$to_return(status = z$status, body = z$body, headers = z$headers)
+    )
+  })
   return(.data)
 }

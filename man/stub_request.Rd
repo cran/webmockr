@@ -36,7 +36,7 @@ If multiple stubs match the same request, we use the first stub. So if you
 want to use a stub that was created after an earlier one that matches,
 remove the earlier one(s).
 
-Note on \code{wi_th()}: If you pass \code{query} values are coerced to character
+Note on \code{wi_th()}: If you pass \code{query}, values are coerced to character
 class in the recorded stub. You can pass numeric, integer, etc., but
 all will be coerced to character.
 
@@ -62,6 +62,30 @@ for a call to \link{grepl}
 See \link{mocking-disk-writing}
 }
 
+\section{Error handling}{
+
+To construct stubs, one uses \code{\link[=stub_request]{stub_request()}} first - which registers
+the stub in the stub registry. Any additional calls to modify the stub
+with for example \code{\link[=wi_th]{wi_th()}} or \code{\link[=to_return]{to_return()}} can error. In those error
+cases we ideally want to remove (unregister) the stub because you
+certainly don't want a registered stub that is not exactly what you
+intended.
+
+When you encounter an error creating a stub you should see a warning
+message that the stub has been removed, for example:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{stub_request("get", "https://httpbin.org/get") \%>\%
+  wi_th(query = mtcars)
+#> Error in `wi_th()`:
+#> ! z$query must be of class list or partial
+#> Run `rlang::last_trace()` to see where the error occurred.
+#> Warning message:
+#> Encountered an error constructing stub
+#> • Removed stub
+#> • To see a list of stubs run stub_registry()
+}\if{html}{\out{</div>}}
+}
+
 \examples{
 \dontrun{
 # basic stubbing
@@ -76,22 +100,23 @@ stub_registry()
 
 # request headers
 stub_request("get", "https://httpbin.org/get") \%>\%
-   wi_th(headers = list('User-Agent' = 'R'))
+  wi_th(headers = list("User-Agent" = "R"))
 
 # request body
 stub_request("post", "https://httpbin.org/post") \%>\%
-   wi_th(body = list(foo = 'bar'))
+  wi_th(body = list(foo = "bar"))
 stub_registry()
 library(crul)
 x <- crul::HttpClient$new(url = "https://httpbin.org")
 crul::mock()
-x$post('post', body = list(foo = 'bar'))
+x$post("post", body = list(foo = "bar"))
 
 # add expectation with to_return
 stub_request("get", "https://httpbin.org/get") \%>\%
   wi_th(
     query = list(hello = "world"),
-    headers = list('User-Agent' = 'R')) \%>\%
+    headers = list("User-Agent" = "R")
+  ) \%>\%
   to_return(status = 200, body = "stuff", headers = list(a = 5))
 
 # list stubs again
@@ -103,17 +128,18 @@ stub_request("get", uri_regex = ".+ample\\\\..")
 # set stub an expectation to timeout
 stub_request("get", "https://httpbin.org/get") \%>\% to_timeout()
 x <- crul::HttpClient$new(url = "https://httpbin.org")
-res <- x$get('get')
+res <- x$get("get")
 
 # raise exception
 library(fauxpas)
 stub_request("get", "https://httpbin.org/get") \%>\% to_raise(HTTPAccepted)
-stub_request("get", "https://httpbin.org/get") \%>\% to_raise(HTTPAccepted, HTTPGone)
+stub_request("get", "https://httpbin.org/get") \%>\%
+  to_raise(HTTPAccepted, HTTPGone)
 
 x <- crul::HttpClient$new(url = "https://httpbin.org")
 stub_request("get", "https://httpbin.org/get") \%>\% to_raise(HTTPBadGateway)
 crul::mock()
-x$get('get')
+x$get("get")
 
 # pass a list to .list
 z <- stub_request("get", "https://httpbin.org/get")
@@ -121,36 +147,37 @@ wi_th(z, .list = list(query = list(foo = "bar")))
 
 # just body
 stub_request("any", uri_regex = ".+") \%>\%
-   wi_th(body = list(foo = 'bar'))
+  wi_th(body = list(foo = "bar"))
 ## with crul
 library(crul)
 x <- crul::HttpClient$new(url = "https://httpbin.org")
 crul::mock()
-x$post('post', body = list(foo = 'bar'))
-x$put('put', body = list(foo = 'bar'))
+x$post("post", body = list(foo = "bar"))
+x$put("put", body = list(foo = "bar"))
 ## with httr
 library(httr)
 httr_mock()
-POST('https://example.com', body = list(foo = 'bar'))
-PUT('https://google.com', body = list(foo = 'bar'))
+POST("https://example.com", body = list(foo = "bar"))
+PUT("https://google.com", body = list(foo = "bar"))
 
 
 # just headers
 headers <- list(
-  'Accept-Encoding' = 'gzip, deflate', 
-  'Accept' = 'application/json, text/xml, application/xml, */*')
+  "Accept-Encoding" = "gzip, deflate",
+  "Accept" = "application/json, text/xml, application/xml, */*"
+)
 stub_request("any", uri_regex = ".+") \%>\% wi_th(headers = headers)
 library(crul)
 x <- crul::HttpClient$new(url = "https://httpbin.org", headers = headers)
 crul::mock()
-x$post('post')
-x$put('put', body = list(foo = 'bar'))
-x$get('put', query = list(stuff = 3423234L))
+x$post("post")
+x$put("put", body = list(foo = "bar"))
+x$get("put", query = list(stuff = 3423234L))
 
 # many responses
 ## the first response matches the first to_return call, and so on
-stub_request("get", "https://httpbin.org/get") \%>\% 
-  to_return(status = 200, body = "foobar", headers = list(a = 5)) \%>\% 
+stub_request("get", "https://httpbin.org/get") \%>\%
+  to_return(status = 200, body = "foobar", headers = list(a = 5)) \%>\%
   to_return(status = 200, body = "bears", headers = list(b = 6))
 con <- crul::HttpClient$new(url = "https://httpbin.org")
 con$get("get")$parse("UTF-8")
@@ -158,13 +185,53 @@ con$get("get")$parse("UTF-8")
 
 ## OR, use times with to_return() to repeat the same response many times
 library(fauxpas)
-stub_request("get", "https://httpbin.org/get") \%>\% 
-  to_return(status = 200, body = "apple-pie", times = 2) \%>\% 
+stub_request("get", "https://httpbin.org/get") \%>\%
+  to_return(status = 200, body = "apple-pie", times = 2) \%>\%
   to_raise(HTTPUnauthorized)
 con <- crul::HttpClient$new(url = "https://httpbin.org")
 con$get("get")$parse("UTF-8")
 con$get("get")$parse("UTF-8")
 con$get("get")$parse("UTF-8")
+
+# partial matching
+## query parameters
+library(httr)
+enable()
+### matches
+stub_request("get", "https://hb.opencpu.org/get") \%>\%
+  wi_th(query = including(list(fruit = "pear"))) \%>\%
+  to_return(body = "matched on partial query!")
+resp <- GET("https://hb.opencpu.org/get",
+  query = list(fruit = "pear", bread = "scone")
+)
+rawToChar(content(resp))
+### doesn't match
+stub_registry_clear()
+stub_request("get", "https://hb.opencpu.org/get") \%>\%
+  wi_th(query = list(fruit = "pear")) \%>\%
+  to_return(body = "didn't match, ugh!")
+# GET("https://hb.opencpu.org/get",
+#  query = list(fruit = "pear", meat = "chicken"))
+
+## request body
+### matches - including
+stub_request("post", "https://hb.opencpu.org/post") \%>\%
+  wi_th(body = including(list(fruit = "pear"))) \%>\%
+  to_return(body = "matched on partial body!")
+resp <- POST("https://hb.opencpu.org/post",
+  body = list(fruit = "pear", meat = "chicken")
+)
+rawToChar(content(resp))
+### matches - excluding
+stub_request("post", "https://hb.opencpu.org/post") \%>\%
+  wi_th(body = excluding(list(fruit = "pear"))) \%>\%
+  to_return(body = "matched on partial body!")
+res <- POST("https://hb.opencpu.org/post",
+  body = list(color = "blue")
+)
+rawToChar(content(res))
+# POST("https://hb.opencpu.org/post",
+#  body = list(fruit = "pear", meat = "chicken"))
 
 # clear all stubs
 stub_registry()

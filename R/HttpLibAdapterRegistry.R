@@ -8,7 +8,7 @@
 #' x$adapters
 #' x$adapters[[1]]$name
 HttpLibAdapaterRegistry <- R6::R6Class(
-  'HttpLibAdapaterRegistry',
+  "HttpLibAdapaterRegistry",
   public = list(
     #' @field adapters list
     adapters = NULL,
@@ -17,10 +17,15 @@ HttpLibAdapaterRegistry <- R6::R6Class(
     #' @param x self
     #' @param ... ignored
     print = function(x, ...) {
-      cat("<HttpLibAdapaterRegistry> ", sep = "\n")
+      cat_line("<HttpLibAdapaterRegistry> ")
       for (i in seq_along(self$adapters)) {
-        cat(sprintf("  %s: webmockr:::%s", self$adapters[[i]]$name,
-                    class(self$adapters[[i]])[1]), sep = "\n")
+        cat_line(
+          sprintf(
+            "  %s: webmockr:::%s",
+            self$adapters[[i]]$name,
+            class(self$adapters[[i]])[1]
+          )
+        )
       }
     },
 
@@ -28,9 +33,8 @@ HttpLibAdapaterRegistry <- R6::R6Class(
     #' @param x an http lib adapter, e.g., [CrulAdapter]
     #' @return nothing, registers the library adapter
     register = function(x) {
-      # FIXME: when other adapters supported, change this inherits test
       if (!inherits(x, c("CrulAdapter", "HttrAdapter", "Httr2Adapter"))) {
-        stop("'x' must be an adapter, such as CrulAdapter", call. = FALSE)
+        abort("'x' must be an adapter, such as CrulAdapter")
       }
       self$adapters <- c(self$adapters, x)
     }

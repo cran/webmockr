@@ -3,7 +3,7 @@ context("StubbedRequest")
 test_that("StubbedRequest: works", {
   expect_is(StubbedRequest, "R6ClassGenerator")
 
-  aa <- StubbedRequest$new(method = "get", uri = "https:/hb.opencpu.org/get")
+  aa <- StubbedRequest$new(method = "get", uri = "https://hb.opencpu.org/get")
 
   expect_is(aa, "StubbedRequest")
 
@@ -19,14 +19,14 @@ test_that("StubbedRequest: works", {
   expect_equal(aa$method, "get")
 
   expect_is(aa$uri, "character")
-  expect_equal(aa$uri, "https:/hb.opencpu.org/get")
+  expect_equal(aa$uri, "https://hb.opencpu.org/get")
 
   expect_is(aa$uri_parts, "list")
-  expect_equal(aa$uri_parts$domain, "https")
-  expect_equal(aa$uri_parts$path, "hb.opencpu.org/get")
+  expect_equal(aa$uri_parts$domain, "hb.opencpu.org")
+  expect_equal(aa$uri_parts$path, "get")
 
   expect_is(aa$to_s, "function")
-  expect_equal(aa$to_s(), "GET: https:/hb.opencpu.org/get")
+  expect_equal(aa$to_s(), "GET: https://hb.opencpu.org/get")
 
   # with
   expect_is(aa$with, "function")
@@ -34,12 +34,12 @@ test_that("StubbedRequest: works", {
   aa$with(query = list(foo = "bar"))
   expect_is(aa$query, "list")
   expect_named(aa$query, "foo")
-  expect_equal(aa$to_s(), "GET: https:/hb.opencpu.org/get?foo=bar")
+  expect_equal(aa$to_s(), "GET: https://hb.opencpu.org/get  with query params foo=bar")
 
   ## >1 query param gets combined with "&" and not ","
   aa$with(query = list(foo = "bar", stuff = 567))
   expect_equal(sort(names(aa$query)), c("foo", "stuff"))
-  expect_equal(aa$to_s(), "GET: https:/hb.opencpu.org/get?foo=bar&stuff=567")
+  expect_equal(aa$to_s(), "GET: https://hb.opencpu.org/get  with query params foo=bar, stuff=567")
 
   # to_return
   expect_is(aa$to_return, "function")
@@ -72,44 +72,61 @@ test_that("StubbedRequest: to_raise", {
   ## many exceptions
   x$to_raise(list(HTTPBadGateway, HTTPForbidden, HTTPInsufficientStorage))
   expect_true(
-    grepl("to_raise: HTTPBadGateway, HTTPForbidden, HTTPInsufficientStorage",
-      x$to_s()))
+    grepl(
+      "to_raise: HTTPBadGateway, HTTPForbidden, HTTPInsufficientStorage",
+      x$to_s()
+    )
+  )
 })
 
 test_that("StubbedRequest: different methods work", {
   expect_equal(
-    StubbedRequest$new(method = "any",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "any",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "any"
   )
   expect_equal(
-    StubbedRequest$new(method = "get",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "get",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "get"
   )
   expect_equal(
-    StubbedRequest$new(method = "head",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "head",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "head"
   )
   expect_equal(
-    StubbedRequest$new(method = "post",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "post",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "post"
   )
   expect_equal(
-    StubbedRequest$new(method = "put",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "put",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "put"
   )
   expect_equal(
-    StubbedRequest$new(method = "patch",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "patch",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "patch"
   )
   expect_equal(
-    StubbedRequest$new(method = "delete",
-      uri = "https:/hb.opencpu.org/get")$method,
+    StubbedRequest$new(
+      method = "delete",
+      uri = "https:/hb.opencpu.org/get"
+    )$method,
     "delete"
   )
 })
@@ -119,8 +136,10 @@ test_that("StubbedRequest fails well", {
   expect_error(StubbedRequest$new(), "one of uri or uri_regex is required")
 
   # method not in acceptable set
-  expect_error(StubbedRequest$new(method = "adf"),
-               "'arg' should be one of")
+  expect_error(
+    StubbedRequest$new(method = "adf"),
+    "'arg' should be one of"
+  )
 })
 
 test_that("StubbedRequest long string handling", {
@@ -128,14 +147,22 @@ test_that("StubbedRequest long string handling", {
 
   # with
   x$with(
-      query = list(foo = "Bar", a = 5, b = 8,
-        user = paste0("asdfa asldfj asdfljas dflajsd fasldjf",
-          " asldfja sdfljas dflajs fdlasjf aslfa fdfdsf")),
-      body = list(a = 5, b = 8, user = "asdfa asldfj asdfljas dflajsdfdfdsf",
-        foo = "Bar"),
-      headers = list(farm = "animal",
-        `User-Agent` =
-        "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf")
+    query = list(
+      foo = "Bar", a = 5, b = 8,
+      user = paste0(
+        "asdfa asldfj asdfljas dflajsd fasldjf",
+        " asldfja sdfljas dflajs fdlasjf aslfa fdfdsf"
+      )
+    ),
+    body = list(
+      a = 5, b = 8, user = "asdfa asldfj asdfljas dflajsdfdfdsf",
+      foo = "Bar"
+    ),
+    headers = list(
+      farm = "animal",
+      `User-Agent` =
+        "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf"
+    )
   )
   # with: long query
   expect_output(x$print(), "foo=Bar, a=5, b=8, user=asdfa asldfj asdflja...")
@@ -146,19 +173,25 @@ test_that("StubbedRequest long string handling", {
 
   # to_return
   x$to_return(
-      status = 200,
-      body = list(name = "julia", title = "advanced user",
-        location = "somewhere in the middle of the earth",
-        foo = "Bar"),
-      headers = list(farm = "animal",
-        `User-Agent` =
-        "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf")
+    status = 200,
+    body = list(
+      name = "julia", title = "advanced user",
+      location = "somewhere in the middle of the earth",
+      foo = "Bar"
+    ),
+    headers = list(
+      farm = "animal",
+      `User-Agent` =
+        "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf"
+    )
   )
   # to_return: status code
   expect_output(x$print(), "200")
   # to_return: long body
-  expect_output(x$print(),
-  "name=julia, title=advanced user, location=somewhere in the mid..., foo=Bar")
+  expect_output(
+    x$print(),
+    "name=julia, title=advanced user, location=somewhere in the mid..., foo=Bar"
+  )
   # to_return: long response headers
   expect_output(x$print(), "farm=animal, User-Agent=stuff things whasdlf...")
 })
@@ -167,25 +200,32 @@ test_that("StubbedRequest long string handling", {
 test_that("StubbedRequest nested lists in body", {
   x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
   x$with(
-      query = list(foo = "Bar"),
-      headers = list(farm = "animal"),
-      body = list(a = list(b = list(c = "foo", d = "bar")))
+    query = list(foo = "Bar"),
+    headers = list(farm = "animal"),
+    body = list(a = list(b = list(c = "foo", d = "bar")))
   )
-  expect_output(x$print(),
-    "a = list\\(b = list\\(c = \"foo\", d = \"bar\"\\)\\)")
+  expect_output(
+    x$print(),
+    "a = list\\(b = list\\(c = \"foo\", d = \"bar\"\\)\\)"
+  )
 
   # longer
   x$with(
-      query = list(foo = "Bar"),
-      headers = list(farm = "animal"),
-      body = list(
-        apple = list(
-          bears = list(
-            cheesecake =
-            list(foo_do_the_thing = "bar asdjlfas dfaljsdf asljdf slf"))))
+    query = list(foo = "Bar"),
+    headers = list(farm = "animal"),
+    body = list(
+      apple = list(
+        bears = list(
+          cheesecake =
+            list(foo_do_the_thing = "bar asdjlfas dfaljsdf asljdf slf")
+        )
+      )
+    )
   )
-  expect_output(x$print(),
-    "apple = list\\(bears = list\\(cheesecake = list\\(foo_do_the_thing = \"bar asdjlfas dfa...")
+  expect_output(
+    x$print(),
+    "apple = list\\(bears = list\\(cheesecake = list\\(foo_do_the_thing = \"bar asdjlfas dfa..."
+  )
 })
 
 test_that("StubbedRequest w/ >1 to_return()", {

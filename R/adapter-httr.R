@@ -60,12 +60,12 @@ httr_cookies_df <- function() {
   df
 }
 
-# x = "https://foobar.com"
-# check_user_pwd(x)
 check_user_pwd <- function(x) {
-  if (is.null(x)) return(x)
+  if (is.null(x)) {
+    return(x)
+  }
   if (grepl("^https?://", x)) {
-    stop(sprintf("expecting string of pattern 'user:pwd', got '%s'", x))
+    abort(c("expecting string of pattern 'user:pwd'", sprintf("got '%s'", x)))
   }
   return(x)
 }
@@ -74,7 +74,7 @@ check_user_pwd <- function(x) {
 #' @export
 #' @param x an unexecuted httr request object
 #' @return a httr request
-build_httr_request = function(x) {
+build_httr_request <- function(x) {
   headers <- as.list(x$headers) %||% NULL
   auth <- check_user_pwd(x$options$userpwd) %||% NULL
   if (!is.null(auth)) {
@@ -97,15 +97,15 @@ build_httr_request = function(x) {
 }
 
 #' Turn on `httr` mocking
-#' 
+#'
 #' Sets a callback that routes `httr` requests through `webmockr`
-#' 
+#'
 #' @export
 #' @param on (logical) set to `TRUE` to turn on, and `FALSE`
 #' to turn off. default: `TRUE`
 #' @return Silently returns `TRUE` when enabled and `FALSE` when disabled.
 httr_mock <- function(on = TRUE) {
-  check_for_pkg("httr")
+  check_installed("httr")
   webmockr_handle <- function(req) {
     webmockr::HttrAdapter$new()$handle_request(req)
   }
@@ -127,17 +127,12 @@ HttrAdapter <- R6::R6Class("HttrAdapter",
     #' @field name adapter name
     name = "HttrAdapter"
   ),
-
   private = list(
     pluck_url = function(request) request$url,
-
     mock = function(on) httr_mock(on),
-
-    build_request   = build_httr_request,
-    build_response  = build_httr_response,
-
+    build_request = build_httr_request,
+    build_response = build_httr_response,
     request_handler = function(request) vcr::RequestHandlerHttr$new(request),
-
     fetch_request = function(request) {
       METHOD <- eval(parse(text = paste0("httr::", request$method)))
       METHOD(
@@ -147,7 +142,7 @@ HttrAdapter <- R6::R6Class("HttrAdapter",
         httr::add_headers(request$headers),
         if (!is.null(request$output$path)) {
           httr::write_disk(request$output$path, TRUE)
-        } 
+        }
       )
     }
   )

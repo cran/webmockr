@@ -13,7 +13,8 @@ webmockr_configure(
   allow_net_connect = FALSE,
   allow_localhost = FALSE,
   allow = NULL,
-  show_stubbing_instructions = TRUE
+  show_stubbing_instructions = TRUE,
+  show_body_diff = FALSE
 )
 
 webmockr_configure_reset()
@@ -37,6 +38,12 @@ all others are not allowed)}
 \item{show_stubbing_instructions}{(logical) Default: \code{TRUE}. If \code{FALSE},
 stubbing instructions are not shown}
 
+\item{show_body_diff}{(logical) Default: \code{FALSE}. If \code{TRUE} show's
+a diff of the stub's request body and the http request body. See also
+\code{\link[=stub_body_diff]{stub_body_diff()}} for manually comparing request and stub bodies.
+Under the hood the Suggested package \code{diffobj} is required to do
+the comparison.}
+
 \item{uri}{(character) a URI/URL as a character string - to determine
 whether or not it is allowed}
 }
@@ -55,7 +62,7 @@ are allowed, then a real HTTP request can be made.
 \dontrun{
 webmockr_configure()
 webmockr_configure(
- allow_localhost = TRUE
+  allow_localhost = TRUE
 )
 webmockr_configuration()
 webmockr_configure_reset()
@@ -71,5 +78,8 @@ webmockr_net_connect_allowed()
 webmockr_disable_net_connect(allow = "google.com")
 ### is a specific URI allowed?
 webmockr_net_connect_allowed("google.com")
+
+# show body diff
+webmockr_configure(show_body_diff = TRUE)
 }
 }

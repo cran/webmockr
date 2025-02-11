@@ -36,15 +36,17 @@ class in the recorded stub. You can pass numeric, integer, etc., but
 all will be coerced to character.
 \item body: various, including character string, list, raw, numeric,
 upload (\code{\link[crul:upload]{crul::upload()}}, \code{\link[httr:upload_file]{httr::upload_file()}}, \code{\link[curl:multipart]{curl::form_file()}}, or
-\code{\link[curl:multipart]{curl::form_data()}} they both create the same object in the end)
+\code{\link[curl:multipart]{curl::form_data()}} they both create the same object in the end). for the
+special case of an empty request body use \code{NA} instead of \code{NULL} because
+with \code{NULL} we can't determine if the user did not supply a body or
+they supplied \code{NULL} to indicate an empty body.
 \item headers: (list) a named list
 \item basic_auth: (character) a length two vector, username and password.
-authentication type (basic/digest/ntlm/etc.) is ignored. that is,
-mocking authenciation right now does not take into account the
-authentication type. We don't do any checking of the username/password
-except to detect edge cases where for example, the username/password
+We don't do any checking of the username/password except to detect
+edge cases where for example, the username/password
 were probably not set by the user on purpose (e.g., a URL is
-picked up by an environment variable)
+picked up by an environment variable). Only basic authentication
+supported \url{https://en.wikipedia.org/wiki/Basic_access_authentication}.
 }
 
 Note that there is no regex matching on query, body, or headers. They
@@ -83,7 +85,7 @@ wi_th(req, query = list(foo = "bar"))
 
 # add headers - has to be a named list
 wi_th(req, headers = list(foo = "bar"))
-wi_th(req, headers = list(`User-Agent` = "webmockr/v1", hello="world"))
+wi_th(req, headers = list(`User-Agent` = "webmockr/v1", hello = "world"))
 
 # .list - pass in a named list instead
 wi_th(req, .list = list(body = list(foo = "bar")))
@@ -91,4 +93,25 @@ wi_th(req, .list = list(body = list(foo = "bar")))
 # basic authentication
 wi_th(req, basic_auth = c("user", "pass"))
 wi_th(req, basic_auth = c("user", "pass"), headers = list(foo = "bar"))
+
+# partial matching, query params
+## including
+wi_th(req, query = including(list(foo = "bar")))
+## excluding
+wi_th(req, query = excluding(list(foo = "bar")))
+
+# partial matching, body
+## including
+wi_th(req, body = including(list(foo = "bar")))
+## excluding
+wi_th(req, body = excluding(list(foo = "bar")))
+
+# basic auth
+## including
+wi_th(req, body = including(list(foo = "bar")))
+## excluding
+wi_th(req, body = excluding(list(foo = "bar")))
+}
+\seealso{
+\code{\link[=including]{including()}}
 }

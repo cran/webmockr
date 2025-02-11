@@ -11,8 +11,26 @@ stubbed request class underlying \code{\link[=stub_request]{stub_request()}}
 x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
 x$method
 x$uri
-x$with(headers = list('User-Agent' = 'R', apple = "good"))
+x$with(headers = list("User-Agent" = "R", apple = "good"))
 x$to_return(status = 200, body = "foobar", headers = list(a = 5))
+x
+x$to_s()
+
+# query
+x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
+x$with(query = list(a = 5))
+x
+x$to_s()
+## including
+x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
+x$with(query = including(list(a = 5)))
+x
+x$to_s()
+x$with(query = including(list(a = 5, b = 7)))
+x$to_s()
+## excluding
+x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
+x$with(query = excluding(list(a = 5)))
 x
 x$to_s()
 
@@ -30,8 +48,10 @@ x$to_s()
 x
 
 x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-x$to_return(status = 200, body = charToRaw("foo bar"),
-  headers = list(a = 5))
+x$to_return(
+  status = 200, body = charToRaw("foo bar"),
+  headers = list(a = 5)
+)
 x$to_s()
 x
 
@@ -53,8 +73,10 @@ unlink(f)
 #   payload written to file during mocked response creation
 x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
 f <- tempfile()
-x$to_return(status = 200, body = mock_file(f, "{\"foo\": \"bar\"}"),
-  headers = list(a = 5))
+x$to_return(
+  status = 200, body = mock_file(f, "{\"foo\": \"bar\"}"),
+  headers = list(a = 5)
+)
 x
 x$to_s()
 unlink(f)
@@ -92,6 +114,8 @@ x
 \item{\code{uri}}{(xx) xx}
 
 \item{\code{uri_regex}}{(xx) xx}
+
+\item{\code{regex}}{a logical}
 
 \item{\code{uri_parts}}{(xx) xx}
 
@@ -224,7 +248,7 @@ Set expectations for what's returned in HTTP response
 
 \item{\code{body}}{(list) response body, one of: \code{character}, \code{json},
 \code{list}, \code{raw}, \code{numeric}, \code{NULL}, \code{FALSE}, or a file connection
-(other connetion types not supported)}
+(other connection types not supported)}
 
 \item{\code{headers}}{(list) named list, response headers. optional.}
 }

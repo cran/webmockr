@@ -6,13 +6,13 @@ Description: Stubbing and setting expectations on 'HTTP' requests.
     'HTTP' method, query parameters, request body, headers and
     more. Can be used for unit tests or outside of a testing 
     context.
-Version: 1.0.0
+Version: 2.0.0
 Authors@R: c(
     person("Scott", "Chamberlain", role = c("aut", "cre"), email =
     "myrmecocystus+r@gmail.com", comment = c(ORCID="0000-0003-1444-9135")),
     person("Aaron", "Wolen", role = "ctb",
     comment = c(ORCID="0000-0003-2542-2202")),
-    person("rOpenSci", role = "fnd", comment = "https://ropensci.org")
+    person("rOpenSci", role = "fnd", comment = c(ROR = "019jywm96"))
     )
 License: MIT + file LICENSE
 URL: https://github.com/ropensci/webmockr,
@@ -21,19 +21,20 @@ URL: https://github.com/ropensci/webmockr,
 BugReports: https://github.com/ropensci/webmockr/issues
 Encoding: UTF-8
 Language: en-US
+Depends: R(>= 4.1.0)
 Imports: curl, jsonlite, magrittr (>= 1.5), R6 (>= 2.1.3), urltools (>=
-        1.6.0), fauxpas, crul (>= 0.7.0), base64enc
-Suggests: testthat, xml2, vcr, httr, httr2
+        1.6.0), fauxpas, crul (>= 0.7.0), rlang, cli
+Suggests: testthat, xml2, vcr, httr, httr2, diffobj
 RoxygenNote: 7.3.2
 X-schema.org-applicationCategory: Web
 X-schema.org-keywords: http, https, API, web-services, curl, mock,
         mocking, fakeweb, http-mocking, testing, testing-tools, tdd
 X-schema.org-isPartOf: https://ropensci.org
 NeedsCompilation: no
-Packaged: 2024-07-22 15:53:03 UTC; sckott
+Packaged: 2025-02-11 19:58:43 UTC; sckott
 Author: Scott Chamberlain [aut, cre] (<https://orcid.org/0000-0003-1444-9135>),
   Aaron Wolen [ctb] (<https://orcid.org/0000-0003-2542-2202>),
-  rOpenSci [fnd] (https://ropensci.org)
+  rOpenSci [fnd] (019jywm96)
 Maintainer: Scott Chamberlain <myrmecocystus+r@gmail.com>
 Repository: CRAN
-Date/Publication: 2024-07-23 05:50:02 UTC
+Date/Publication: 2025-02-11 20:30:02 UTC
