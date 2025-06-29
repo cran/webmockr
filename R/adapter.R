@@ -8,46 +8,9 @@
 #' * `Httr2Adapter` for \pkg{httr2}
 #' @details Note that the documented fields and methods are the same across all
 #'   client-specific adapters.
-#' @export
-#' @examples \dontrun{
-#' if (requireNamespace("httr", quietly = TRUE)) {
-#'   # library(httr)
-#'
-#'   # normal httr request, works fine
-#'   # real <- GET("https://httpbin.org/get")
-#'   # real
-#'
-#'   # with webmockr
-#'   # library(webmockr)
-#'   ## turn on httr mocking
-#'   # httr_mock()
-#'   ## now this request isn't allowed
-#'   # GET("https://httpbin.org/get")
-#'   ## stub the request
-#'   # stub_request('get', uri = 'https://httpbin.org/get') %>%
-#'   #   wi_th(
-#'   #     headers = list(
-#'   #      'Accept' = 'application/json, text/xml, application/xml, */*'
-#'   #     )
-#'   #   ) %>%
-#'   #   to_return(status = 418, body = "I'm a teapot!", headers = list(a = 5))
-#'   ## now the request succeeds and returns a mocked response
-#'   # (res <- GET("https://httpbin.org/get"))
-#'   # res$status_code
-#'   # rawToChar(res$content)
-#'
-#'   # allow real requests while webmockr is loaded
-#'   # webmockr_allow_net_connect()
-#'   # webmockr_net_connect_allowed()
-#'   # GET("https://httpbin.org/get?animal=chicken")
-#'   # webmockr_disable_net_connect()
-#'   # webmockr_net_connect_allowed()
-#'   # GET("https://httpbin.org/get?animal=chicken")
-#'
-#'   # httr_mock(FALSE)
-#' }
-#' }
-Adapter <- R6::R6Class("Adapter",
+#' @keywords internal
+Adapter <- R6::R6Class(
+  "Adapter",
   public = list(
     #' @field client HTTP client package name
     client = NULL,
@@ -72,10 +35,13 @@ Adapter <- R6::R6Class("Adapter",
     #' @return `TRUE`, invisibly
     enable = function(quiet = FALSE) {
       assert_is(quiet, "logical")
-      if (!quiet) message(sprintf("%s enabled!", self$name))
+      if (!quiet) {
+        message(sprintf("%s enabled!", self$name))
+      }
       webmockr_lightswitch[[self$client]] <- TRUE
 
-      switch(self$client,
+      switch(
+        self$client,
         crul = crul::mock(on = TRUE),
         httr = httr_mock(on = TRUE),
         httr2 = httr2_mock(on = TRUE)
@@ -87,11 +53,14 @@ Adapter <- R6::R6Class("Adapter",
     #' @return `FALSE`, invisibly
     disable = function(quiet = FALSE) {
       assert_is(quiet, "logical")
-      if (!quiet) message(sprintf("%s disabled!", self$name))
+      if (!quiet) {
+        message(sprintf("%s disabled!", self$name))
+      }
       webmockr_lightswitch[[self$client]] <- FALSE
       self$remove_stubs()
 
-      switch(self$client,
+      switch(
+        self$client,
         crul = crul::mock(on = FALSE),
         httr = httr_mock(on = FALSE),
         httr2 = httr2_mock(on = FALSE)
@@ -136,7 +105,6 @@ Adapter <- R6::R6Class("Adapter",
           resp <- private$add_response_sequences(ss, resp)
         }
 
-
         # request is not in cache but connections are allowed
       } else if (webmockr_net_connect_allowed(uri = private$pluck_url(req))) {
         # if real requests || localhost || certain exceptions ARE
@@ -162,7 +130,8 @@ Adapter <- R6::R6Class("Adapter",
 
           # stub request so next time we match it
           req_url <- private$pluck_url(req)
-          urip <- crul::url_parse(req_url)
+          urip <- curl::curl_parse_url(req_url)
+          urip$params <- as.list(urip$params)
           m <- vcr::vcr_configuration()$match_requests_on
 
           if (all(m %in% c("method", "uri")) && length(m) == 2) {
@@ -171,7 +140,7 @@ Adapter <- R6::R6Class("Adapter",
             all(m %in% c("method", "uri", "query")) && length(m) == 3
           ) {
             tmp <- stub_request(req$method, req_url)
-            wi_th(tmp, .list = list(query = urip$parameter))
+            wi_th(tmp, .list = list(query = urip$params))
           } else if (
             all(m %in% c("method", "uri", "headers")) && length(m) == 3
           ) {
@@ -181,8 +150,9 @@ Adapter <- R6::R6Class("Adapter",
             all(m %in% c("method", "uri", "headers", "query")) && length(m) == 4
           ) {
             tmp <- stub_request(req$method, req_url)
-            wi_th(tmp,
-              .list = list(query = urip$parameter, headers = req$headers)
+            wi_th(
+              tmp,
+              .list = list(query = urip$params, headers = req$headers)
             )
           }
         } else {
@@ -200,7 +170,8 @@ Adapter <- R6::R6Class("Adapter",
         }
 
         # no stubs found and net connect not allowed - STOP
-        x <- c("Real HTTP connections are disabled.",
+        x <- c(
+          "Real HTTP connections are disabled.",
           "!" = "Unregistered request:"
         )
         y <- "\nYou can stub this request with the following snippet:\n"
@@ -214,9 +185,16 @@ Adapter <- R6::R6Class("Adapter",
         if (length(webmockr_stub_registry$request_stubs)) {
           msgz <- paste(
             z,
-            paste0(vapply(webmockr_stub_registry$request_stubs, function(z) {
-              z$to_s()
-            }, ""), collapse = "\n ")
+            paste0(
+              vapply(
+                webmockr_stub_registry$request_stubs,
+                function(z) {
+                  z$to_s()
+                },
+                ""
+              ),
+              collapse = "\n "
+            )
           )
         }
         msg_diff <- ""
@@ -251,7 +229,8 @@ Adapter <- R6::R6Class("Adapter",
         if (!is.null(x$headers)) {
           hd <- x$headers
           hd_str <- paste0(
-            paste(sprintf("'%s'", names(hd)),
+            paste(
+              sprintf("'%s'", names(hd)),
               sprintf("'%s'", unlist(unname(hd))),
               sep = " = "
             ),
@@ -272,7 +251,8 @@ Adapter <- R6::R6Class("Adapter",
               " wi_th(\n       headers = list(%s),",
               "\n       body = list(%s)\n     )"
             ),
-            hd_str, bd_str
+            hd_str,
+            bd_str
           )
         } else if (nzchar(hd_str) && !nzchar(bd_str)) {
           with_str <- sprintf(

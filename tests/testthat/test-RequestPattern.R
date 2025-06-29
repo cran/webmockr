@@ -1,19 +1,17 @@
-context("RequestPattern")
-
 test_that("RequestPattern: structure is correct", {
-  expect_is(RequestPattern, "R6ClassGenerator")
+  expect_s3_class(RequestPattern, "R6ClassGenerator")
 
   aa <- RequestPattern$new(method = "get", uri = hb("/get"))
 
-  expect_is(aa, "RequestPattern")
+  expect_s3_class(aa, "RequestPattern")
   expect_null(aa$body_pattern)
   expect_null(aa$headers_pattern)
-  expect_is(aa$clone, "function")
-  expect_is(aa$initialize, "function")
-  expect_is(aa$matches, "function")
-  expect_is(aa$method_pattern, "MethodPattern")
-  expect_is(aa$to_s, "function")
-  expect_is(aa$uri_pattern, "UriPattern")
+  expect_type(aa$clone, "closure")
+  expect_type(aa$initialize, "closure")
+  expect_type(aa$matches, "closure")
+  expect_s3_class(aa$method_pattern, "MethodPattern")
+  expect_type(aa$to_s, "closure")
+  expect_s3_class(aa$uri_pattern, "UriPattern")
 })
 
 test_that("RequestPattern: behaves as expected", {
@@ -30,14 +28,14 @@ test_that("RequestPattern: behaves as expected", {
   expect_false(aa$matches(rs2))
   expect_false(aa$matches(rs3))
 
-  expect_is(aa$to_s(), "character")
+  expect_type(aa$to_s(), "character")
   expect_match(aa$to_s(), "GET")
   expect_match(aa$to_s(), "hb.opencpu.org/get")
 })
 
 test_that("RequestPattern: uri_regex", {
   x <- RequestPattern$new(method = "get", uri_regex = ".+ossref.org")
-  expect_is(x$uri_pattern, "UriPattern")
+  expect_s3_class(x$uri_pattern, "UriPattern")
   expect_equal(x$uri_pattern$to_s(), "https?://.+ossref.org")
   expect_equal(x$to_s(), "GET https?://.+ossref.org")
 })
@@ -57,7 +55,8 @@ test_that("RequestPattern fails well", {
 test_that("should match if request body and body pattern are the same", {
   aa <- RequestPattern$new(method = "get", uri = hb("/get"), body = "abc")
   rs1 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(body = "abc")
   )
   expect_true(aa$matches(rs1))
@@ -65,9 +64,14 @@ test_that("should match if request body and body pattern are the same", {
 
 test_that("should match if request body and body pattern are the same with multline text", {
   multiline_text <- "hello\nworld"
-  bb <- RequestPattern$new(method = "get", uri = hb("/get"), body = multiline_text)
+  bb <- RequestPattern$new(
+    method = "get",
+    uri = hb("/get"),
+    body = multiline_text
+  )
   rs2 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(body = multiline_text)
   )
   expect_true(bb$matches(rs2))
@@ -79,7 +83,8 @@ test_that("regex", {})
 test_that("should match if pattern is missing body but is in signature", {
   cc <- RequestPattern$new(method = "get", uri = hb("/get"))
   rs3 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(body = "abc")
   )
   expect_true(cc$matches(rs3))
@@ -88,7 +93,8 @@ test_that("should match if pattern is missing body but is in signature", {
 test_that("should not match if pattern has body specified as NA but request body is not empty", {
   dd <- RequestPattern$new(method = "get", uri = hb("/get"), body = NA)
   rs4 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(body = "abc")
   )
   expect_false(dd$matches(rs4))
@@ -97,7 +103,8 @@ test_that("should not match if pattern has body specified as NA but request body
 test_that("should not match if pattern has body specified as empty string but request body is not empty", {
   ee <- RequestPattern$new(method = "get", uri = hb("/get"), body = "")
   rs5 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(body = "abc")
   )
   expect_false(ee$matches(rs5))
@@ -121,11 +128,13 @@ test_that("should match when pattern body is json or list", {
 
   # These should both be TRUE
   pattern_as_list <- RequestPattern$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     body = body_list
   )
   rs7 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(
       headers = list(`Content-Type` = "application/json"),
       body = jsonlite::toJSON(body_list, auto_unbox = TRUE)
@@ -134,7 +143,8 @@ test_that("should match when pattern body is json or list", {
   expect_true(pattern_as_list$matches(rs7))
 
   pattern_as_json <- RequestPattern$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     body = jsonlite::toJSON(body_list, auto_unbox = TRUE)
   )
   expect_true(pattern_as_json$matches(rs7))
@@ -142,11 +152,13 @@ test_that("should match when pattern body is json or list", {
 
 test_that("should match when pattern body is a list and body is various content types", {
   pattern <- RequestPattern$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     body = list(data = list(a = "1", b = "five"))
   )
   rs_xml <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(
       headers = list(`Content-Type` = "application/xml"),
       body = '<data a="1" b="five" />'
@@ -166,35 +178,51 @@ test_that("should match when pattern body is a list and body is various content 
       </employees>
     </company>'
 
-  xml_employees_list <- list(company = list(
-    employees = list(
-      company = "MacroSoft", division = "Sales",
-      employee = list(
-        empno = "7369", ename = "SMITH", job = "CLERK",
-        hiredate = "17-DEC-1980"
-      ), employee = list(
-        empno = "7499",
-        ename = "ALLEN", job = "SALESMAN", hiredate = "20-FEB-1981"
-      )
-    ),
-    employees = list(
-      company = "MacroSoft", division = "Research",
-      employee = list(
-        empno = "7698", ename = "BLAKE", job = "MANAGER",
-        hiredate = "01-MAY-1981"
-      ), employee = list(
-        empno = "7782",
-        ename = "CLARK", job = "MANAGER", hiredate = "09-JUN-1981"
+  xml_employees_list <- list(
+    company = list(
+      employees = list(
+        company = "MacroSoft",
+        division = "Sales",
+        employee = list(
+          empno = "7369",
+          ename = "SMITH",
+          job = "CLERK",
+          hiredate = "17-DEC-1980"
+        ),
+        employee = list(
+          empno = "7499",
+          ename = "ALLEN",
+          job = "SALESMAN",
+          hiredate = "20-FEB-1981"
+        )
+      ),
+      employees = list(
+        company = "MacroSoft",
+        division = "Research",
+        employee = list(
+          empno = "7698",
+          ename = "BLAKE",
+          job = "MANAGER",
+          hiredate = "01-MAY-1981"
+        ),
+        employee = list(
+          empno = "7782",
+          ename = "CLARK",
+          job = "MANAGER",
+          hiredate = "09-JUN-1981"
+        )
       )
     )
-  ))
+  )
 
   pattern2 <- RequestPattern$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     body = xml_employees_list
   )
   rs_xml2 <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(
       headers = list(`Content-Type` = "application/xml"),
       body = xml_employees_text
@@ -205,11 +233,13 @@ test_that("should match when pattern body is a list and body is various content 
 
 test_that("should warn when xml parsing fails and fall back to the xml string", {
   pattern <- RequestPattern$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     body = '<data a="1" b="five" />'
   )
   rs_xml_parse_fail <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(
       headers = list(`Content-Type` = "application/xml"),
       body = '<data a="1" b="five" '
@@ -221,47 +251,50 @@ test_that("should warn when xml parsing fails and fall back to the xml string", 
 
 test_that("should work with basic_auth", {
   pattern <- RequestPattern$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     basic_auth = c("user", "pass")
   )
 
-  expect_equal(pattern$headers_pattern$to_s(), "authorization=\"Basic dXNlcjpwYXNz\"")
+  expect_equal(
+    pattern$headers_pattern$to_s(),
+    "authorization=\"Basic dXNlcjpwYXNz\""
+  )
 
   rs_basic_auth <- RequestSignature$new(
-    method = "get", uri = hb("/get"),
+    method = "get",
+    uri = hb("/get"),
     options = list(headers = prep_auth("user:pass"))
   )
   expect_true(pattern$matches(rs_basic_auth))
 })
 
 
-context("MethodPattern")
 test_that("MethodPattern: structure is correct", {
-  expect_is(MethodPattern, "R6ClassGenerator")
+  expect_s3_class(MethodPattern, "R6ClassGenerator")
 
   aa <- MethodPattern$new(pattern = "get")
 
-  expect_is(aa, "MethodPattern")
-  expect_is(aa$pattern, "character")
+  expect_s3_class(aa, "MethodPattern")
+  expect_type(aa$pattern, "character")
   expect_equal(aa$pattern, "get")
   expect_true(aa$matches(method = "get"))
   expect_false(aa$matches(method = "post"))
 
   expect_error(
-    expect_is(aa$matches(), "function"),
+    expect_type(aa$matches(), "closure"),
     "argument \"method\" is missing"
   )
 })
 
 
-context("HeadersPattern")
 test_that("HeadersPattern: structure is correct", {
-  expect_is(HeadersPattern, "R6ClassGenerator")
+  expect_s3_class(HeadersPattern, "R6ClassGenerator")
 
   aa <- HeadersPattern$new(pattern = list(a = 5))
 
-  expect_is(aa, "HeadersPattern")
-  expect_is(aa$pattern, "list")
+  expect_s3_class(aa, "HeadersPattern")
+  expect_type(aa$pattern, "list")
   expect_named(aa$pattern, "a")
   expect_true(aa$matches(headers = list(a = 5)))
   expect_false(aa$matches(headers = list(a = 6)))
@@ -272,7 +305,7 @@ test_that("HeadersPattern: structure is correct", {
   expect_true(bb$matches(list()))
 
   expect_error(
-    expect_is(aa$matches(), "function"),
+    expect_type(aa$matches(), "closure"),
     "argument \"headers\" is missing"
   )
 
@@ -280,10 +313,8 @@ test_that("HeadersPattern: structure is correct", {
 })
 
 
-
-context("BodyPattern")
 test_that("BodyPattern: structure is correct", {
-  expect_is(BodyPattern, "R6ClassGenerator")
+  expect_s3_class(BodyPattern, "R6ClassGenerator")
 
   bb <- RequestSignature$new(
     method = "get",
@@ -294,8 +325,8 @@ test_that("BodyPattern: structure is correct", {
   )
 
   aa <- BodyPattern$new(pattern = list(foo = "bar"))
-  expect_is(aa, "BodyPattern")
-  expect_is(aa$pattern, "list")
+  expect_s3_class(aa, "BodyPattern")
+  expect_type(aa$pattern, "list")
   expect_named(aa$pattern, "foo")
   expect_false(aa$matches(bb$body))
 
@@ -325,13 +356,16 @@ test_that("BodyPattern: structure is correct", {
 
 test_that("BodyPattern: converts json/character to list internally", {
   skip_if_not_installed("httr")
-  library("httr")
+  suppressPackageStartupMessages(library("httr", warn.conflicts = FALSE))
 
-  enable()
+  enable(quiet = TRUE)
 
   # via https://github.com/ropensci/webmockr/issues/139
   # and https://github.com/mdneuzerling/lambdr/issues/40
-  response_body <- as.character(jsonlite::toJSON(list(parity = "odd"), auto_unbox = TRUE))
+  response_body <- as.character(jsonlite::toJSON(
+    list(parity = "odd"),
+    auto_unbox = TRUE
+  ))
 
   stub_request("post", "http://pink.tv/pajamas") |>
     wi_th(body = response_body) |>
@@ -341,17 +375,17 @@ test_that("BodyPattern: converts json/character to list internally", {
   expect_s3_class(res, "response")
   expect_equal(status_code(res), 200)
 
-  disable()
+  disable(quiet = TRUE)
 })
 
-context("UriPattern")
+
 test_that("UriPattern: structure is correct", {
-  expect_is(UriPattern, "R6ClassGenerator")
+  expect_s3_class(UriPattern, "R6ClassGenerator")
 
   aa <- UriPattern$new(pattern = "http://foobar.com")
 
-  expect_is(aa, "UriPattern")
-  expect_is(aa$pattern, "character")
+  expect_s3_class(aa, "UriPattern")
+  expect_type(aa$pattern, "character")
   expect_false(aa$regex)
   expect_match(aa$pattern, "foobar")
   # matches w/o slash
@@ -361,15 +395,15 @@ test_that("UriPattern: structure is correct", {
 
   # fails well
   expect_error(
-    expect_is(aa$matches(), "function"),
+    expect_type(aa$matches(), "closure"),
     "argument \"uri\" is missing"
   )
 
   # regex usage
   z <- UriPattern$new(regex_pattern = ".+ample\\..")
 
-  expect_is(z, "UriPattern")
-  expect_is(z$pattern, "character")
+  expect_s3_class(z, "UriPattern")
+  expect_type(z$pattern, "character")
   expect_true(z$regex)
   expect_true(z$matches("http://sample.org"))
   expect_true(z$matches("http://example.com"))
@@ -400,8 +434,8 @@ test_that("UriPattern: structure is correct", {
   # regex with query parameters
   z <- UriPattern$new(regex_pattern = "https://x.com/.+/order\\?fruit=apple")
 
-  expect_is(z, "UriPattern")
-  expect_is(z$pattern, "character")
+  expect_s3_class(z, "UriPattern")
+  expect_type(z$pattern, "character")
   expect_true(z$regex)
   expect_true(z$matches("https://x.com/a/order?fruit=apple"))
   expect_true(z$matches("https://x.com/b/order?fruit=apple"))

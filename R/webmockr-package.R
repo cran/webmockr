@@ -18,11 +18,10 @@
 "_PACKAGE"
 
 ## usethis namespace: start
-#' @importFrom R6 R6Class
+#' @importFrom cli cli_abort ansi_collapse format_error cat_line
 #' @importFrom fauxpas HTTPRequestTimeout
-#' @importFrom crul mock
+#' @importFrom R6 R6Class
 #' @importFrom rlang abort warn check_installed is_list is_function is_error
 #' caller_arg try_fetch caller_env
-#' @importFrom cli cli_abort ansi_collapse format_error cat_line
 ## usethis namespace: end
 NULL

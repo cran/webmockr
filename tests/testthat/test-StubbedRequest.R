@@ -1,11 +1,9 @@
-context("StubbedRequest")
-
 test_that("StubbedRequest: works", {
-  expect_is(StubbedRequest, "R6ClassGenerator")
+  expect_s3_class(StubbedRequest, "R6ClassGenerator")
 
   aa <- StubbedRequest$new(method = "get", uri = "https://hb.opencpu.org/get")
 
-  expect_is(aa, "StubbedRequest")
+  expect_s3_class(aa, "StubbedRequest")
 
   expect_null(aa$host)
   expect_null(aa$query)
@@ -15,42 +13,48 @@ test_that("StubbedRequest: works", {
   expect_null(aa$response)
   expect_null(aa$response_sequences)
 
-  expect_is(aa$method, "character")
+  expect_type(aa$method, "character")
   expect_equal(aa$method, "get")
 
-  expect_is(aa$uri, "character")
+  expect_type(aa$uri, "character")
   expect_equal(aa$uri, "https://hb.opencpu.org/get")
 
-  expect_is(aa$uri_parts, "list")
+  expect_type(aa$uri_parts, "list")
   expect_equal(aa$uri_parts$domain, "hb.opencpu.org")
   expect_equal(aa$uri_parts$path, "get")
 
-  expect_is(aa$to_s, "function")
+  expect_type(aa$to_s, "closure")
   expect_equal(aa$to_s(), "GET: https://hb.opencpu.org/get")
 
   # with
-  expect_is(aa$with, "function")
+  expect_type(aa$with, "closure")
   expect_null(aa$query)
   aa$with(query = list(foo = "bar"))
-  expect_is(aa$query, "list")
+  expect_type(aa$query, "list")
   expect_named(aa$query, "foo")
-  expect_equal(aa$to_s(), "GET: https://hb.opencpu.org/get  with query params foo=bar")
+  expect_equal(
+    aa$to_s(),
+    "GET: https://hb.opencpu.org/get  with query params foo=bar"
+  )
 
   ## >1 query param gets combined with "&" and not ","
   aa$with(query = list(foo = "bar", stuff = 567))
   expect_equal(sort(names(aa$query)), c("foo", "stuff"))
-  expect_equal(aa$to_s(), "GET: https://hb.opencpu.org/get  with query params foo=bar, stuff=567")
+  expect_equal(
+    aa$to_s(),
+    "GET: https://hb.opencpu.org/get  with query params foo=bar, stuff=567"
+  )
 
   # to_return
-  expect_is(aa$to_return, "function")
+  expect_type(aa$to_return, "closure")
   expect_null(aa$body)
   aa$to_return(
     status = 404,
     body = list(hello = "world"),
     headers = list(a = 5)
   )
-  expect_is(aa$responses_sequences, "list")
-  expect_is(aa$responses_sequences[[1]]$body, "list")
+  expect_type(aa$responses_sequences, "list")
+  expect_type(aa$responses_sequences[[1]]$body, "list")
   expect_named(aa$responses_sequences[[1]]$body, "hello")
 })
 
@@ -148,20 +152,23 @@ test_that("StubbedRequest long string handling", {
   # with
   x$with(
     query = list(
-      foo = "Bar", a = 5, b = 8,
+      foo = "Bar",
+      a = 5,
+      b = 8,
       user = paste0(
         "asdfa asldfj asdfljas dflajsd fasldjf",
         " asldfja sdfljas dflajs fdlasjf aslfa fdfdsf"
       )
     ),
     body = list(
-      a = 5, b = 8, user = "asdfa asldfj asdfljas dflajsdfdfdsf",
+      a = 5,
+      b = 8,
+      user = "asdfa asldfj asdfljas dflajsdfdfdsf",
       foo = "Bar"
     ),
     headers = list(
       farm = "animal",
-      `User-Agent` =
-        "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf"
+      `User-Agent` = "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf"
     )
   )
   # with: long query
@@ -175,14 +182,14 @@ test_that("StubbedRequest long string handling", {
   x$to_return(
     status = 200,
     body = list(
-      name = "julia", title = "advanced user",
+      name = "julia",
+      title = "advanced user",
       location = "somewhere in the middle of the earth",
       foo = "Bar"
     ),
     headers = list(
       farm = "animal",
-      `User-Agent` =
-        "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf"
+      `User-Agent` = "stuff things whasdlfj adsfla jsdflja sdflasj dflasj dfasljf asdf"
     )
   )
   # to_return: status code
@@ -216,8 +223,9 @@ test_that("StubbedRequest nested lists in body", {
     body = list(
       apple = list(
         bears = list(
-          cheesecake =
-            list(foo_do_the_thing = "bar asdjlfas dfaljsdf asljdf slf")
+          cheesecake = list(
+            foo_do_the_thing = "bar asdjlfas dfaljsdf asljdf slf"
+          )
         )
       )
     )

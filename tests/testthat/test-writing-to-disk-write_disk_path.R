@@ -1,6 +1,3 @@
-context("write_disk_path behavior")
-
-# crul
 test_that("with crul", {
   skip_on_cran()
   skip_if_not_installed("vcr")
@@ -8,10 +5,10 @@ test_that("with crul", {
   dir <- tempdir()
   invisible(vcr_configure(dir = dir))
 
-  library(crul)
+  suppressPackageStartupMessages(library("crul", warn.conflicts = FALSE))
   f <- tempfile(fileext = ".json")
 
-  webmockr_net_connect_allowed()
+  sm(webmockr_net_connect_allowed())
 
   # path not set
   expect_error(
@@ -36,7 +33,7 @@ test_that("with crul", {
   unlink(wdp, TRUE)
   unlink(file.path(dir, "write_disk_path_not_set_crul_error.yml"))
   unlink(file.path(dir, "write_disk_path_not_set_crul_noerror.yml"))
-  webmockr_disable_net_connect()
+  suppressMessages(webmockr_disable_net_connect())
   unloadNamespace("vcr")
 })
 
@@ -65,7 +62,7 @@ test_that("if relative path set its not expanded to full path anymore", {
   # cleanup
   # unlink("files", recursive = TRUE)
   unlink("stuff.json")
-  webmockr_disable_net_connect()
+  suppressMessages(webmockr_disable_net_connect())
   unloadNamespace("vcr")
 })
 
@@ -74,20 +71,23 @@ test_that("with httr", {
   skip_on_cran()
   skip_if_not_installed("vcr")
   library("vcr")
-  enable()
+  enable(quiet = TRUE)
   dir <- tempdir()
   invisible(vcr_configure(dir = dir))
 
   library(httr)
   f <- tempfile(fileext = ".json")
 
-  webmockr_net_connect_allowed()
+  sm(webmockr_net_connect_allowed())
 
   # path not set
+  # FIXME for vcr v2 - should no longer error
   expect_error(
-    suppressWarnings(use_cassette("write_disk_path_not_set_crul_error", {
-      out <- GET(hb("/get"), write_disk(f))
-    })),
+    suppressWarnings(
+      use_cassette("write_disk_path_not_set_httr_error", {
+        out <- GET(hb("/get"), write_disk(f))
+      })
+    ),
     "write_disk_path must be given"
   )
 
@@ -96,7 +96,7 @@ test_that("with httr", {
   wdp <- file.path(dir, "files")
   invisible(vcr_configure(dir = dir, write_disk_path = wdp))
   expect_error(
-    use_cassette("write_disk_path_not_set_crul_noerror", {
+    use_cassette("write_disk_path_not_set_httr_noerror", {
       out <- GET(hb("/get"), write_disk(f))
     }),
     NA
@@ -105,9 +105,9 @@ test_that("with httr", {
   # cleanup
   unlink(f)
   unlink(wdp, TRUE)
-  unlink(file.path(dir, "write_disk_path_not_set_crul_error.yml"))
-  unlink(file.path(dir, "write_disk_path_not_set_crul_noerror.yml"))
-  webmockr_disable_net_connect()
+  unlink(file.path(dir, "write_disk_path_not_set_httr_error.yml"))
+  unlink(file.path(dir, "write_disk_path_not_set_httr_noerror.yml"))
+  suppressMessages(webmockr_disable_net_connect())
   unloadNamespace("vcr")
 })
 
@@ -136,6 +136,6 @@ test_that("if relative path set its not expanded to full path anymore: httr", {
   # cleanup
   # unlink("files", recursive = TRUE)
   unlink("stuff.json")
-  webmockr_disable_net_connect()
+  suppressMessages(webmockr_disable_net_connect())
   unloadNamespace("vcr")
 })

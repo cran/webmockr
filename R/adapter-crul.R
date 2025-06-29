@@ -1,11 +1,13 @@
 #' Build a crul response
 #' @export
+#' @keywords internal
 #' @param req a request
 #' @param resp a response
 #' @return a crul response
 build_crul_response <- function(req, resp) {
   # prep headers
-  if (grepl("^ftp://", resp$url %||% "")) { # in case uri_regex only
+  if (grepl("^ftp://", resp$url %||% "")) {
+    # in case uri_regex only
     headers <- list()
   } else {
     hds <- resp$headers
@@ -50,7 +52,7 @@ build_crul_response <- function(req, resp) {
 }
 
 #' Build a crul request
-#' @export
+#' @keywords internal
 #' @param x an unexecuted crul request object
 #' @return a crul request
 build_crul_request <- function(x) {
@@ -75,7 +77,9 @@ build_crul_request <- function(x) {
 
 #' @rdname Adapter
 #' @export
-CrulAdapter <- R6::R6Class("CrulAdapter",
+#' @keywords internal
+CrulAdapter <- R6::R6Class(
+  "CrulAdapter",
   inherit = Adapter,
   public = list(
     #' @field client HTTP client package name

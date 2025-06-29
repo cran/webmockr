@@ -1,9 +1,9 @@
 #' Build a httr response
 #' @export
+#' @keywords internal
 #' @param req a request
 #' @param resp a response
 #' @return a httr response
-
 build_httr_response <- function(req, resp) {
   try_url <- tryCatch(resp$url, error = function(e) e)
 
@@ -11,7 +11,8 @@ build_httr_response <- function(req, resp) {
     url = try_url %|s|% req$url,
     status_code = as.integer(resp$status_code),
     headers = {
-      if (grepl("^ftp://", resp$url %||% "")) { # in case uri_regex only
+      if (grepl("^ftp://", resp$url %||% "")) {
+        # in case uri_regex only
         list()
       } else {
         hds <- resp$headers
@@ -71,7 +72,7 @@ check_user_pwd <- function(x) {
 }
 
 #' Build a httr request
-#' @export
+#' @keywords internal
 #' @param x an unexecuted httr request object
 #' @return a httr request
 build_httr_request <- function(x) {
@@ -119,7 +120,9 @@ httr_mock <- function(on = TRUE) {
 
 #' @rdname Adapter
 #' @export
-HttrAdapter <- R6::R6Class("HttrAdapter",
+#' @keywords internal
+HttrAdapter <- R6::R6Class(
+  "HttrAdapter",
   inherit = Adapter,
   public = list(
     #' @field client HTTP client package name

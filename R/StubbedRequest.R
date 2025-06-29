@@ -1,17 +1,7 @@
 #' @title StubCounter
 #' @description hash with counter to store requests and count number
 #' of requests made against the stub
-#' @export
-#' @examples
-#' x <- StubCounter$new()
-#' x
-#' x$hash
-#' x$count()
-#' z <- RequestSignature$new(method = "get", uri = "https:/httpbin.org/get")
-#' x$put(z)
-#' x$count()
-#' x$put(z)
-#' x$count()
+#' @keywords internal
 StubCounter <- R6::R6Class(
   "StubCounter",
   public = list(
@@ -42,103 +32,8 @@ StubCounter <- R6::R6Class(
 
 #' @title StubbedRequest
 #' @description stubbed request class underlying [stub_request()]
-#' @export
+#' @keywords internal
 #' @seealso [stub_request()]
-#' @examples \dontrun{
-#' x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' x$method
-#' x$uri
-#' x$with(headers = list("User-Agent" = "R", apple = "good"))
-#' x$to_return(status = 200, body = "foobar", headers = list(a = 5))
-#' x
-#' x$to_s()
-#'
-#' # query
-#' x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
-#' x$with(query = list(a = 5))
-#' x
-#' x$to_s()
-#' ## including
-#' x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
-#' x$with(query = including(list(a = 5)))
-#' x
-#' x$to_s()
-#' x$with(query = including(list(a = 5, b = 7)))
-#' x$to_s()
-#' ## excluding
-#' x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
-#' x$with(query = excluding(list(a = 5)))
-#' x
-#' x$to_s()
-#'
-#' # many to_return's
-#' x <- StubbedRequest$new(method = "get", uri = "httpbin.org")
-#' x$to_return(status = 200, body = "foobar", headers = list(a = 5))
-#' x$to_return(status = 200, body = "bears", headers = list(b = 6))
-#' x
-#' x$to_s()
-#'
-#' # raw body
-#' x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' x$to_return(status = 200, body = raw(0), headers = list(a = 5))
-#' x$to_s()
-#' x
-#'
-#' x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' x$to_return(
-#'   status = 200, body = charToRaw("foo bar"),
-#'   headers = list(a = 5)
-#' )
-#' x$to_s()
-#' x
-#'
-#' # basic auth
-#' x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' x$with(basic_auth = c("foo", "bar"))
-#' x$to_s()
-#' x
-#'
-#' # file path
-#' x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' f <- tempfile()
-#' x$to_return(status = 200, body = file(f), headers = list(a = 5))
-#' x
-#' x$to_s()
-#' unlink(f)
-#'
-#' # to_file(): file path and payload to go into the file
-#' #   payload written to file during mocked response creation
-#' x <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' f <- tempfile()
-#' x$to_return(
-#'   status = 200, body = mock_file(f, "{\"foo\": \"bar\"}"),
-#'   headers = list(a = 5)
-#' )
-#' x
-#' x$to_s()
-#' unlink(f)
-#'
-#' # uri_regex
-#' (x <- StubbedRequest$new(method = "get", uri_regex = ".+ossref.org"))
-#' x$method
-#' x$uri_regex
-#' x$to_s()
-#'
-#' # to timeout
-#' (x <- StubbedRequest$new(method = "get", uri_regex = ".+ossref.org"))
-#' x$to_s()
-#' x$to_timeout()
-#' x$to_s()
-#' x
-#'
-#' # to raise
-#' library(fauxpas)
-#' (x <- StubbedRequest$new(method = "get", uri_regex = ".+ossref.org"))
-#' x$to_s()
-#' x$to_raise(HTTPBadGateway)
-#' x$to_s()
-#' x
-#' }
 StubbedRequest <- R6::R6Class(
   "StubbedRequest",
   public = list(
@@ -191,8 +86,12 @@ StubbedRequest <- R6::R6Class(
       }
       self$uri <- uri
       self$uri_regex <- uri_regex
-      if (!is.null(uri_regex)) self$regex <- TRUE
-      if (!is.null(uri)) self$uri_parts <- parseurl(self$uri)
+      if (!is.null(uri_regex)) {
+        self$regex <- TRUE
+      }
+      if (!is.null(uri)) {
+        self$uri_parts <- parseurl(self$uri)
+      }
       self$counter <- StubCounter$new()
     },
 
@@ -209,7 +108,8 @@ StubbedRequest <- R6::R6Class(
         cat_line("    body: ")
       } else {
         cat_line(sprintf(
-          "    body (class: %s): %s", class(self$body)[1L],
+          "    body (class: %s): %s",
+          class(self$body)[1L],
           hdl_lst(self$body)
         ))
       }
@@ -240,7 +140,8 @@ StubbedRequest <- R6::R6Class(
         cat_line(paste0(
           "    should_raise: ",
           if (rs[[i]]$raise) {
-            paste0(vapply(rs[[i]]$exceptions, "[[", "", "classname"),
+            paste0(
+              vapply(rs[[i]]$exceptions, "[[", "", "classname"),
               collapse = ", "
             )
           } else {
@@ -257,8 +158,11 @@ StubbedRequest <- R6::R6Class(
     #' @param basic_auth (character) basic authentication. optional.
     #' @return nothing returned; sets only
     with = function(
-        query = NULL, body = NULL, headers = NULL,
-        basic_auth = NULL) {
+      query = NULL,
+      body = NULL,
+      headers = NULL,
+      basic_auth = NULL
+    ) {
       if (!is.null(query)) {
         query[] <- lapply(query, as.character)
       }
@@ -358,44 +262,49 @@ StubbedRequest <- R6::R6Class(
     #' @return (character) the response as a string
     to_s = function() {
       ret <- self$responses_sequences
-      gsub("^\\s+|\\s+$", "", sprintf(
-        "  %s: %s %s %s %s %s",
-        toupper(self$method),
-        url_builder(self$uri %||% self$uri_regex, self$regex),
-        make_query(self$query),
-        make_body(self$body),
-        make_headers(self$request_headers),
-        if (length(ret) > 0) {
-          strgs <- c()
-          for (i in seq_along(ret)) {
-            bd <- make_body(ret[[i]]$body)
-            stt <- make_status(ret[[i]]$status)
-            hed <- make_headers(ret[[i]]$headers)
-            strgs[i] <- sprintf(
-              "%s %s %s",
-              if (nzchar(paste0(bd, stt, hed))) {
-                paste("| to_return: ", bd, stt, hed)
-              } else {
-                ""
-              },
-              if (ret[[i]]$timeout) "| should_timeout: TRUE" else "",
-              if (ret[[i]]$raise) {
-                paste0(
-                  "| to_raise: ",
-                  paste0(vapply(ret[[i]]$exceptions, "[[", "", "classname"),
-                    collapse = ", "
+      gsub(
+        "^\\s+|\\s+$",
+        "",
+        sprintf(
+          "  %s: %s %s %s %s %s",
+          toupper(self$method),
+          url_builder(self$uri %||% self$uri_regex, self$regex),
+          make_query(self$query),
+          make_body(self$body),
+          make_headers(self$request_headers),
+          if (length(ret) > 0) {
+            strgs <- c()
+            for (i in seq_along(ret)) {
+              bd <- make_body(ret[[i]]$body)
+              stt <- make_status(ret[[i]]$status)
+              hed <- make_headers(ret[[i]]$headers)
+              strgs[i] <- sprintf(
+                "%s %s %s",
+                if (nzchar(paste0(bd, stt, hed))) {
+                  paste("| to_return: ", bd, stt, hed)
+                } else {
+                  ""
+                },
+                if (ret[[i]]$timeout) "| should_timeout: TRUE" else "",
+                if (ret[[i]]$raise) {
+                  paste0(
+                    "| to_raise: ",
+                    paste0(
+                      vapply(ret[[i]]$exceptions, "[[", "", "classname"),
+                      collapse = ", "
+                    )
                   )
-                )
-              } else {
-                ""
-              }
-            )
+                } else {
+                  ""
+                }
+              )
+            }
+            paste0(strgs, collapse = " ")
+          } else {
+            ""
           }
-          paste0(strgs, collapse = " ")
-        } else {
-          ""
-        }
-      ))
+        )
+      )
     },
 
     #' @description Reset the counter for the stub
@@ -408,9 +317,15 @@ StubbedRequest <- R6::R6Class(
     append_response = function(x) {
       self$responses_sequences <- cc(c(self$responses_sequences, list(x)))
     },
-    response = function(status = NULL, body = NULL, headers = NULL,
-                        body_raw = NULL, timeout = FALSE, raise = FALSE,
-                        exceptions = list()) {
+    response = function(
+      status = NULL,
+      body = NULL,
+      headers = NULL,
+      body_raw = NULL,
+      timeout = FALSE,
+      raise = FALSE,
+      exceptions = list()
+    ) {
       list(
         status = status,
         body = body,

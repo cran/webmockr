@@ -1,25 +1,7 @@
 #' @title StubRegistry
 #' @description stub registry to keep track of [StubbedRequest] stubs
-#' @export
+#' @keywords internal
 #' @family stub-registry
-#' @examples \dontrun{
-#' # Make a stub
-#' stub1 <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' stub1$with(headers = list("User-Agent" = "R"))
-#' stub1$to_return(status = 200, body = "foobar", headers = list())
-#' stub1
-#'
-#' # Make another stub
-#' stub2 <- StubbedRequest$new(method = "get", uri = "api.crossref.org")
-#' stub2
-#'
-#' # Put both stubs in the stub registry
-#' reg <- StubRegistry$new()
-#' reg$register_stub(stub = stub1)
-#' reg$register_stub(stub = stub2)
-#' reg
-#' reg$request_stubs
-#' }
 StubRegistry <- R6::R6Class(
   "StubRegistry",
   public = list(
@@ -58,15 +40,22 @@ StubRegistry <- R6::R6Class(
     #' @return logical, 1 or more
     request_stub_for = function(request_signature, count = TRUE) {
       stubs <- self$request_stubs
-      mtchs <- vapply(stubs, function(z) {
-        tmp <- RequestPattern$new(
-          method = z$method, uri = z$uri,
-          uri_regex = z$uri_regex, query = z$query,
-          body = z$body, headers = z$request_headers,
-          basic_auth = z$basic_auth
-        )
-        tmp$matches(request_signature)
-      }, logical(1))
+      mtchs <- vapply(
+        stubs,
+        function(z) {
+          tmp <- RequestPattern$new(
+            method = z$method,
+            uri = z$uri,
+            uri_regex = z$uri_regex,
+            query = z$query,
+            body = z$body,
+            headers = z$request_headers,
+            basic_auth = z$basic_auth
+          )
+          tmp$matches(request_signature)
+        },
+        logical(1)
+      )
       if (count) {
         for (i in seq_along(stubs)) {
           if (mtchs[i]) stubs[[i]]$counter$put(request_signature)
@@ -130,10 +119,18 @@ make_body <- function(x) {
   if (is.null(x)) {
     return("")
   }
-  if (inherits(x, "mock_file")) x <- x$payload
-  if (inherits(x, c("form_file", "partial"))) x <- unclass(x)
+  if (inherits(x, "mock_file")) {
+    x <- x$payload
+  }
+  if (inherits(x, c("form_file", "partial"))) {
+    x <- unclass(x)
+  }
   clzzes <- vapply(x, function(z) inherits(z, "form_file"), logical(1))
-  if (any(clzzes)) for (i in seq_along(x)) x[[i]] <- unclass(x[[i]])
+  if (any(clzzes)) {
+    for (i in seq_along(x)) {
+      x[[i]] <- unclass(x[[i]])
+    }
+  }
   if (json_validate(x)) {
     body <- x
   } else {
@@ -147,17 +144,21 @@ make_query <- function(x) {
   if (is.null(x)) {
     return("")
   }
-  txt <- paste(names(x), subs(unname(unlist(x)), 20),
+  txt <- paste(
+    names(x),
+    subs(unname(unlist(x)), 20),
     sep = "=",
     collapse = ", "
   )
   if (attr(x, "partial_match") %||% FALSE) {
     txt <- sprintf(
       "%s(%s)",
-      switch(attr(x, "partial_type"),
+      switch(
+        attr(x, "partial_type"),
         include = "including",
         exclude = "excluding"
-      ), txt
+      ),
+      txt
     )
   }
   paste0(" with query params ", txt)
