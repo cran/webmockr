@@ -1,5 +1,6 @@
 test_that("uri_regex with crul", {
-  stub_request("get", uri_regex = "hb.opencpu.org/.+") %>%
+  skip_on_cran()
+  stub_request("get", uri_regex = "hb.cran.dev/.+") %>%
     to_return(body = list(foo = "bar"))
 
   library(crul, warn.conflicts = FALSE)
@@ -44,7 +45,7 @@ test_that("uri_regex with crul", {
 stub_registry_clear()
 
 test_that("uri_regex with httr", {
-  stub_request("get", uri_regex = "hb.opencpu.org/.+") %>%
+  stub_request("get", uri_regex = "hb.cran.dev/.+") %>%
     to_return(body = list(foo = "bar"))
 
   library(httr, warn.conflicts = FALSE)
@@ -88,7 +89,7 @@ stub_registry_clear()
 test_that("uri_regex with httr2", {
   skip_if_not_installed("httr2")
 
-  stub_request("get", uri_regex = "hb.opencpu.org/.+") %>%
+  stub_request("get", uri_regex = "hb.cran.dev/.+") %>%
     to_return(body = list(foo = "bar"))
 
   library(httr2, warn.conflicts = FALSE)

@@ -221,6 +221,8 @@ test_that("wi_th handles HEADERS with varied input classes", {
 disable("httr", quiet = TRUE)
 
 test_that("wi_th basic_auth, crul", {
+  skip_on_cran()
+
   # crul
   library(crul, warn.conflicts = FALSE)
   enable("crul", quiet = TRUE)
@@ -274,7 +276,6 @@ test_that("wi_th basic_auth, httr", {
 })
 
 test_that("wi_th basic_auth, httr2", {
-  unloadNamespace("vcr")
   skip_if_not_installed("httr2")
   library(httr2, warn.conflicts = FALSE)
   enable("httr2", quiet = TRUE)

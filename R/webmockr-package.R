@@ -5,7 +5,6 @@
 #' - Matching requests based on method, URI, headers and body
 #' - Supports multiple HTTP libraries, including \pkg{crul},
 #' \pkg{httr}, and \pkg{httr2}
-#' - Integration with HTTP test caching library \pkg{vcr}
 #' - Supports async http request mocking with \pkg{crul} only
 #'
 #' @examples
@@ -22,6 +21,6 @@
 #' @importFrom fauxpas HTTPRequestTimeout
 #' @importFrom R6 R6Class
 #' @importFrom rlang abort warn check_installed is_list is_function is_error
-#' caller_arg try_fetch caller_env
+#' caller_arg try_fetch caller_env is_installed has_name
 ## usethis namespace: end
 NULL
